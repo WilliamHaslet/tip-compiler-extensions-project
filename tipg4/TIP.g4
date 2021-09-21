@@ -17,7 +17,7 @@ declaration : KVAR nameDeclaration (',' nameDeclaration)* ';' ;
 
 nameDeclaration : IDENTIFIER ;
 
-////////////////////// TIP Expressions ////////////////////////// 
+////////////////////// TIP Expressions //////////////////////////
 
 // Expressions in TIP are ordered to capture precedence.
 // We adopt the C convention that orders operators as:
@@ -37,20 +37,37 @@ nameDeclaration : IDENTIFIER ;
 //
 expr : expr '(' (expr (',' expr)*)? ')' 	#funAppExpr
      | expr '.' IDENTIFIER 			#accessExpr
-     | '*' expr 				#deRefExpr
-     | SUB NUMBER				#negNumber
-     | '&' expr					#refExpr
-     | expr op=(MUL | DIV) expr 		#multiplicativeExpr
-     | expr op=(ADD | SUB) expr 		#additiveExpr
-     | expr op=GT expr 				#relationalExpr
-     | expr op=(EQ | NE) expr 			#equalityExpr
-     | IDENTIFIER				#varExpr
-     | NUMBER					#numExpr
-     | KINPUT					#inputExpr
-     | KALLOC expr				#allocExpr
-     | KNULL					#nullExpr
-     | recordExpr				#recordRule
-     | '(' expr ')'				#parenExpr
+
+     | 'not' expr 		                #notExpr
+
+     | '*' expr 				        #deRefExpr
+     | SUB NUMBER				        #negNumber
+     | SUB expr				            #negationExpr
+     | '&' expr					        #refExpr
+     | expr op=(MUL | DIV | MOD) expr 		#multiplicativeExpr
+     | expr op=(ADD | SUB) expr 		    #additiveExpr
+     | expr op=(GT | GTE | LT | LTE) expr 	#relationalExpr
+     | expr op=(EQ | NE) expr 			    #equalityExpr
+
+     | expr 'and' expr                  #andExpr
+     | expr 'or' expr 	                #orExpr
+
+     | expr '?' expr ':' expr 	        #ternaryExpr
+
+     | IDENTIFIER				        #varExpr
+     | NUMBER					        #numExpr
+     | KINPUT					        #inputExpr
+     | KALLOC expr				        #allocExpr
+     | KNULL					        #nullExpr
+     | recordExpr				        #recordRule
+     | '(' expr ')'				        #parenExpr
+
+     | 'true'				            #trueExpr
+     | 'false'				            #falseExpr
+     | '[' expr 'of' expr ']'           #ofArrayExpr
+     | '[' (expr (',' expr)*)? ']'      #arrayExpr
+     | '#' expr                         #arrayLengthExpr
+     | expr '[' expr ']'                #elementRefrenceOperatorExpr
 ;
 
 recordExpr : '{' (fieldExpr (',' fieldExpr)*)? '}' ;
@@ -65,6 +82,10 @@ statement : blockStmt
     | ifStmt
     | outputStmt
     | errorStmt
+    | forIterStmt
+    | forRangeStmt
+    | incrementStmt
+    | decrementStmt
 ;
 
 assignStmt : expr '=' expr ';' ;
@@ -72,6 +93,10 @@ assignStmt : expr '=' expr ';' ;
 blockStmt : '{' (statement*) '}' ;
 
 whileStmt : KWHILE '(' expr ')' statement ;
+
+forIterStmt : KFOR '(' expr ':' expr ')' statement ;
+
+forRangeStmt : KFOR '(' expr ':' expr '..' expr ('by' expr)? ')' statement ;
 
 ifStmt : KIF '(' expr ')' statement (KELSE statement)? ;
 
@@ -81,6 +106,9 @@ errorStmt : KERROR expr ';'  ;
 
 returnStmt : KRETURN expr ';'  ;
 
+incrementStmt : expr '++' ';'  ;
+
+decrementStmt : expr '--' ';'  ;
 
 ////////////////////// TIP Lexicon ////////////////////////// 
 
@@ -88,9 +116,13 @@ returnStmt : KRETURN expr ';'  ;
 
 MUL : '*' ;
 DIV : '/' ;
+MOD  : '%' ;
 ADD : '+' ;
 SUB : '-' ;
 GT  : '>' ;
+LT  : '<' ;
+GTE  : '>=' ;
+LTE  : '<=' ;
 EQ  : '==' ;
 NE  : '!=' ;
 
@@ -101,6 +133,7 @@ NUMBER : [0-9]+ ;
 KALLOC  : 'alloc' ;
 KINPUT  : 'input' ;
 KWHILE  : 'while' ;
+KFOR    : 'for' ;
 KIF     : 'if' ;
 KELSE   : 'else' ;
 KVAR    : 'var' ;
@@ -122,3 +155,24 @@ WS : [ \t\n\r]+ -> skip ;
 BLOCKCOMMENT: '/*' .*? '*/' -> skip ;
 
 COMMENT : '//' ~[\n\r]* -> skip ;
+
+// All the things that need to be added
+// true
+// false
+// not 
+// and 
+// or
+// [E1, ..., En]
+// [E1 of E2]
+// E1[E2]
+// #[]
+// %
+// -(E1)
+// >=
+// <
+// <=
+// E1 ? E2 : E3
+// E1++
+// E1--
+// for (E1 : E2)
+// for (E1 : E2 .. E3 by E4)
