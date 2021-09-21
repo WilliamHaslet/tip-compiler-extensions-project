@@ -270,24 +270,6 @@ TEST_CASE("TIP Parser: keywords as ids", "[TIP Parser]") {
 }
 
 
-TEST_CASE("TIP Lexer: illegal comparison token", "[TIP Lexer]") {
-    std::stringstream stream;
-    stream << R"(
-      operators() { var x; if (x <= 0) x = x + 1; return x; }
-    )";
-
-    REQUIRE_FALSE(ParserHelper::is_parsable(stream));
-}
-
-TEST_CASE("TIP Lexer: illegal operator token", "[TIP Lexer]") {
-    std::stringstream stream;
-    stream << R"(
-      operators() { var x; if (x == 0) x = x % 2; return x; }
-    )";
-
-    REQUIRE_FALSE(ParserHelper::is_parsable(stream));
-}
-
 TEST_CASE("TIP Lexer: illegal identifier token", "[TIP Lexer]") {
     std::stringstream stream;
     stream << R"(
