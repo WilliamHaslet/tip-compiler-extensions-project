@@ -37,9 +37,9 @@ nameDeclaration : IDENTIFIER ;
 //
 expr : expr '(' (expr (',' expr)*)? ')' 	#funAppExpr
      | expr '.' IDENTIFIER 			#accessExpr
-
      | 'not' expr 		                #notExpr
-
+     | '#' expr                         #arrayLengthExpr
+     | expr '[' expr ']'                #elementRefrenceOperatorExpr
      | '*' expr 				        #deRefExpr
      | SUB NUMBER				        #negNumber
      | SUB expr				            #negationExpr
@@ -66,8 +66,6 @@ expr : expr '(' (expr (',' expr)*)? ')' 	#funAppExpr
      | 'false'				            #falseExpr
      | '[' expr 'of' expr ']'           #ofArrayExpr
      | '[' (expr (',' expr)*)? ']'      #arrayExpr
-     | '#' expr                         #arrayLengthExpr
-     | expr '[' expr ']'                #elementRefrenceOperatorExpr
 ;
 
 recordExpr : '{' (fieldExpr (',' fieldExpr)*)? '}' ;
