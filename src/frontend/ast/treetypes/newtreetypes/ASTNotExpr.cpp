@@ -8,6 +8,11 @@ void ASTNotExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
+llvm::Value* ASTNotExpr::codegen()
+{
+  return nullptr;
+}
+
 std::ostream& ASTNotExpr::print(std::ostream &out) const {
   out << "not " << *getExpr();
   return out;

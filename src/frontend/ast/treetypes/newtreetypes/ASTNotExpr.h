@@ -7,7 +7,7 @@
 class ASTNotExpr : public ASTExpr {
   std::unique_ptr<ASTExpr> VAR;
 public:
-  ASTDeRefExpr(std::unique_ptr<ASTExpr> VAR) : VAR(std::move(VAR)) {}
+  ASTNotExpr(std::unique_ptr<ASTExpr> VAR) : VAR(std::move(VAR)) {}
   ASTExpr* getExpr() const { return VAR.get(); }
   void accept(ASTVisitor * visitor) override;
   llvm::Value* codegen() override;

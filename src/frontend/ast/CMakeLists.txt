@@ -55,7 +55,35 @@ target_sources(
           ${CMAKE_CURRENT_SOURCE_DIR}/ASTVisitor.h
           ${CMAKE_CURRENT_SOURCE_DIR}/ASTBuilder.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/ASTBuilder.h
-          ${CMAKE_SOURCE_DIR}/externals/PicoSHA2/picosha2.h)
+          ${CMAKE_SOURCE_DIR}/externals/PicoSHA2/picosha2.h
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTAndExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTAndExpr.cpp
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTArrayExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTArrayExpr.cpp
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTDecrementStmt.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTDecrementStmt.cpp
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTForIterStmt.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTForIterStmt.cpp
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTForRangeStmt.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTForRangeStmt.cpp
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTIncrementStmt.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTIncrementStmt.cpp
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTNotExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTNotExpr.cpp
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTOfArrayExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTOfArrayExpr.cpp
+
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTOrExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTOrExpr.cpp
+          )
 target_include_directories(
   ast
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}

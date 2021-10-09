@@ -34,3 +34,13 @@
 #include "ASTStmt.h"
 #include "ASTVariableExpr.h"
 #include "ASTWhileStmt.h"
+
+#include "newtreetypes/ASTAndExpr.h"
+#include "newtreetypes/ASTArrayExpr.h"
+#include "newtreetypes/ASTDecrementStmt.h"
+#include "newtreetypes/ASTForIterStmt.h"
+#include "newtreetypes/ASTForRangeStmt.h"
+#include "newtreetypes/ASTIncrementStmt.h"
+#include "newtreetypes/ASTNotExpr.h"
+#include "newtreetypes/ASTOfArrayExpr.h"
+#include "newtreetypes/ASTOrExpr.h"

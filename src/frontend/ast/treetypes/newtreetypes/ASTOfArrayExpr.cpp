@@ -9,6 +9,11 @@ void ASTOfArrayExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
+llvm::Value* ASTOfArrayExpr::codegen()
+{
+  return nullptr;
+}
+
 std::ostream& ASTOfArrayExpr::print(std::ostream &out) const {
   out << "[" << *getLeft() << " of " << *getRight() << "]";
   return out;

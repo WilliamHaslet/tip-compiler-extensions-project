@@ -9,6 +9,11 @@ void ASTOrExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
+llvm::Value* ASTOrExpr::codegen()
+{
+  return nullptr;
+}
+
 std::ostream& ASTOrExpr::print(std::ostream &out) const {
   out << "(" << *getLeft() << " or " << *getRight() << ")";
   return out;

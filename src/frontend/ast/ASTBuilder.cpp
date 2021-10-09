@@ -483,3 +483,110 @@ std::string ASTBuilder::generateSHA256(std::string tohash) {
   picosha2::hash256(tohash.begin(), tohash.end(), hash.begin(), hash.end());
   return picosha2::bytes_to_hex_string(hash.begin(), hash.end());
 }
+
+// New node builders
+Any ASTBuilder::visitAndExpr(TIPParser::AndExprContext *ctx)
+{
+  visit(ctx->expr(0));
+  auto lhs = std::move(visitedExpr);
+
+  visit(ctx->expr(1));
+  auto rhs = std::move(visitedExpr);
+
+  visitedExpr = std::make_unique<ASTAndExpr>(std::move(lhs), std::move(rhs));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitDecrementStmt(TIPParser::DecrementStmtContext *ctx)
+{
+  visit(ctx->expr());
+  visitedStmt = std::make_unique<ASTDecrementStmt>(std::move(visitedExpr));
+
+  // Set source location 
+  visitedStmt->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitForIterStmt(TIPParser::ForIterStmtContext *ctx) 
+{
+  visit(ctx->expr(0));
+  auto left = std::move(visitedExpr);
+
+  visit(ctx->expr(1));
+  auto right = std::move(visitedExpr);
+
+  visit(ctx->statement());
+  auto body = std::move(visitedStmt);
+  visitedStmt = std::make_unique<ASTForIterStmt>(std::move(left), std::move(right), std::move(body));
+
+  // Set source location 
+  visitedStmt->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitForRangeStmt(TIPParser::ForRangeStmtContext *ctx) 
+{
+  visit(ctx->expr(0));
+  auto one = std::move(visitedExpr);
+
+  visit(ctx->expr(1));
+  auto two = std::move(visitedExpr);
+
+  visit(ctx->expr(2));
+  auto three = std::move(visitedExpr);
+
+  visit(ctx->expr(3));
+  auto four = std::move(visitedExpr);
+
+  visit(ctx->statement());
+  auto body = std::move(visitedStmt);
+  visitedStmt = std::make_unique<ASTForRangeStmt>(std::move(one), std::move(two), 
+                std::move(three), std::move(four), std::move(body));
+
+  // Set source location 
+  visitedStmt->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitIncrementStmt(TIPParser::IncrementStmtContext *ctx)
+{
+  visit(ctx->expr());
+  visitedStmt = std::make_unique<ASTIncrementStmt>(std::move(visitedExpr));
+
+  // Set source location 
+  visitedStmt->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitOfArrayExpr(TIPParser::OfArrayExprContext *ctx)
+{
+  visit(ctx->expr(0));
+  auto left = std::move(visitedExpr);
+
+  visit(ctx->expr(1));
+  auto right = std::move(visitedExpr);
+  
+  visitedExpr = std::make_unique<ASTOfArrayExpr>(std::move(left), std::move(right));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitOrExpr(TIPParser::OrExprContext *ctx)
+{
+  visit(ctx->expr(0));
+  auto lhs = std::move(visitedExpr);
+
+  visit(ctx->expr(1));
+  auto rhs = std::move(visitedExpr);
+
+  visitedExpr = std::make_unique<ASTOrExpr>(std::move(lhs), std::move(rhs));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}

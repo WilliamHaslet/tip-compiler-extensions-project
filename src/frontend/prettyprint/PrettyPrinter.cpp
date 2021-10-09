@@ -306,3 +306,107 @@ std::string PrettyPrinter::indent() const {
   return std::string(indentLevel*indentSize, indentChar);
 }
 
+void PrettyPrinter::endVisit(ASTAndExpr * element) {
+  std::string rightString = visitResults.back();
+  visitResults.pop_back();
+  std::string leftString = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(" + leftString + " and " + rightString + ")");
+}
+
+void PrettyPrinter::endVisit(ASTArrayExpr * element) {
+  std::string arrayString = "";
+  bool skip = true;
+  for (auto &f : element->getEntries()) {
+    if (skip) {
+      arrayString = visitResults.back() + arrayString;
+      visitResults.pop_back();
+      skip = false;
+      continue;
+    }
+    arrayString = visitResults.back() + ", " + arrayString;
+    visitResults.pop_back();
+  }
+
+  visitResults.push_back("[" + arrayString + "]");
+}
+
+void PrettyPrinter::endVisit(ASTDecrementStmt * element) {
+  std::string e = visitResults.back();
+  visitResults.pop_back();
+  visitResults.push_back(indent() + e + "--;");
+}
+
+bool PrettyPrinter::visit(ASTForIterStmt * element) {
+  indentLevel++;
+  return true;
+}
+
+void PrettyPrinter::endVisit(ASTForIterStmt * element) {
+  std::string bodyString = visitResults.back();
+  visitResults.pop_back();
+  std::string right = visitResults.back();
+  visitResults.pop_back();
+  std::string left = visitResults.back();
+  visitResults.pop_back();
+
+  indentLevel--;
+
+  std::string forString = indent() + "for (" + left + " : " + right + ") \n" + bodyString;
+  visitResults.push_back(forString);
+}
+
+bool PrettyPrinter::visit(ASTForRangeStmt * element) {
+  indentLevel++;
+  return true;
+}
+
+void PrettyPrinter::endVisit(ASTForRangeStmt * element) {
+  std::string bodyString = visitResults.back();
+  visitResults.pop_back();
+  std::string four = visitResults.back();
+  visitResults.pop_back();
+  std::string three = visitResults.back();
+  visitResults.pop_back();
+  std::string two = visitResults.back();
+  visitResults.pop_back();
+  std::string one = visitResults.back();
+  visitResults.pop_back();
+
+  indentLevel--;
+
+  std::string forString = indent() + "for (" + one + " : " + two + " .. " + three + " by " + four + ") \n" + bodyString;
+  visitResults.push_back(forString);
+}
+
+void PrettyPrinter::endVisit(ASTIncrementStmt * element) {
+  std::string e = visitResults.back();
+  visitResults.pop_back();
+  visitResults.push_back(indent() + e + "++;");
+}
+
+void PrettyPrinter::endVisit(ASTNotExpr * element) {
+  std::string e = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(not " + e + ")");
+}
+
+void PrettyPrinter::endVisit(ASTOfArrayExpr * element) {
+  std::string rightString = visitResults.back();
+  visitResults.pop_back();
+  std::string leftString = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("[" + leftString + " of " + rightString + "]");
+}
+
+void PrettyPrinter::endVisit(ASTOrExpr * element) {
+  std::string rightString = visitResults.back();
+  visitResults.pop_back();
+  std::string leftString = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(" + leftString + " or " + rightString + ")");
+}

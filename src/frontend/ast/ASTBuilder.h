@@ -61,4 +61,14 @@ public:
   Any visitOutputStmt(TIPParser::OutputStmtContext *ctx) override;
   Any visitErrorStmt(TIPParser::ErrorStmtContext *ctx) override;
   Any visitReturnStmt(TIPParser::ReturnStmtContext *ctx) override;
+
+  Any visitAndExpr(TIPParser::AndExprContext *ctx) override;
+  
+  Any visitDecrementStmt(TIPParser::DecrementStmtContext *ctx) override;
+  Any visitForIterStmt(TIPParser::ForIterStmtContext *ctx) override;
+  Any visitForRangeStmt(TIPParser::ForRangeStmtContext *ctx) override;
+  Any visitIncrementStmt(TIPParser::IncrementStmtContext *ctx) override;
+
+  Any visitOfArrayExpr(TIPParser::OfArrayExprContext *ctx) override;
+  Any visitOrExpr(TIPParser::OrExprContext *ctx) override;
 };
