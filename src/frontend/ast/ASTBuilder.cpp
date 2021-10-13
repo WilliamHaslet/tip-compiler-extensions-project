@@ -563,6 +563,18 @@ Any ASTBuilder::visitIncrementStmt(TIPParser::IncrementStmtContext *ctx)
   return "";
 }
 
+Any ASTBuilder::visitNegationExpr(TIPParser::NegationExprContext *ctx)
+{
+  visit(ctx->expr());
+  auto e = std::move(visitedExpr);
+
+  visitedExpr = std::make_unique<ASTNegationExpr>(std::move(e));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
 Any ASTBuilder::visitNotExpr(TIPParser::NotExprContext *ctx)
 {
   visit(ctx->expr());

@@ -254,6 +254,7 @@ TEST_CASE("ASTPrinterTest: new nodes test", "[ASTNodePrint]") {
         for (1 : 2 .. 3){}
         for (1 : 2 .. 3 by 4){}
         x++;
+        x = -y;
         x = not 4;
         x = [10 of 4];
         x = 3 or 4;
@@ -268,6 +269,7 @@ TEST_CASE("ASTPrinterTest: new nodes test", "[ASTNodePrint]") {
       "for (1 : 2 .. 3) { }",
       "for (1 : 2 .. 3 by 4) { }",
       "x++;",
+      "x = -(y);",
       "x = not 4;",
       "x = [10 of 4];",
       "x = (3 or 4);",

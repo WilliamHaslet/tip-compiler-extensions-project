@@ -84,6 +84,9 @@ public:
   virtual bool visit(ASTIncrementStmt * element) { return true; }
   virtual void endVisit(ASTIncrementStmt * element) {}
 
+  virtual bool visit(ASTNegationExpr * element) { return true; }
+  virtual void endVisit(ASTNegationExpr * element) {}
+
   virtual bool visit(ASTNotExpr * element) { return true; }
   virtual void endVisit(ASTNotExpr * element) {}
 

@@ -72,6 +72,9 @@ target_sources(
           ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTIncrementStmt.h
           ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTIncrementStmt.cpp
 
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTNegationExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTNegationExpr.cpp
+
           ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTNotExpr.h
           ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTNotExpr.cpp
 

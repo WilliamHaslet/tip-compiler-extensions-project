@@ -62,6 +62,7 @@ public:
   virtual bool visit(ASTForRangeStmt * element) override;
   virtual void endVisit(ASTForRangeStmt * element) override;
   virtual void endVisit(ASTIncrementStmt * element) override;
+  virtual void endVisit(ASTNegationExpr * element) override;
   virtual void endVisit(ASTNotExpr * element) override;
   virtual void endVisit(ASTOfArrayExpr * element) override;
   virtual void endVisit(ASTOrExpr * element) override;

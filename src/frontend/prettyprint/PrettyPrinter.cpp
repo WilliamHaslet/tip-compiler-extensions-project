@@ -383,6 +383,13 @@ void PrettyPrinter::endVisit(ASTIncrementStmt * element) {
   visitResults.push_back(indent() + e + "++;");
 }
 
+void PrettyPrinter::endVisit(ASTNegationExpr * element) {
+  std::string e = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("-(" + e + ")");
+}
+
 void PrettyPrinter::endVisit(ASTNotExpr * element) {
   std::string e = visitResults.back();
   visitResults.pop_back();

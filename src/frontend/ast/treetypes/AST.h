@@ -40,6 +40,7 @@
 #include "newtreetypes/ASTForIterStmt.h"
 #include "newtreetypes/ASTForRangeStmt.h"
 #include "newtreetypes/ASTIncrementStmt.h"
+#include "newtreetypes/ASTNegationExpr.h"
 #include "newtreetypes/ASTNotExpr.h"
 #include "newtreetypes/ASTOfArrayExpr.h"
 #include "newtreetypes/ASTOrExpr.h"

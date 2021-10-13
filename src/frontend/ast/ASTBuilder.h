@@ -67,6 +67,7 @@ public:
   Any visitForIterStmt(TIPParser::ForIterStmtContext *ctx) override;
   Any visitForRangeStmt(TIPParser::ForRangeStmtContext *ctx) override;
   Any visitIncrementStmt(TIPParser::IncrementStmtContext *ctx) override;
+  Any visitNegationExpr(TIPParser::NegationExprContext *ctx) override;
   Any visitNotExpr(TIPParser::NotExprContext *ctx) override;
   Any visitOfArrayExpr(TIPParser::OfArrayExprContext *ctx) override;
   Any visitOrExpr(TIPParser::OrExprContext *ctx) override;
