@@ -44,3 +44,10 @@
 #include "newtreetypes/ASTNotExpr.h"
 #include "newtreetypes/ASTOfArrayExpr.h"
 #include "newtreetypes/ASTOrExpr.h"
+#include "newtreetypes/ASTArrayExpr.h"
+#include "newtreetypes/ASTTernaryExpr.h"
+#include "newtreetypes/ASTElementRefrenceOperatorExpr.h"
+#include "newtreetypes/ASTArrayLengthExpr.h"
+#include "newtreetypes/ASTTrueExpr.h"
+#include "newtreetypes/ASTFalseExpr.h"
+

@@ -71,4 +71,10 @@ public:
   Any visitNotExpr(TIPParser::NotExprContext *ctx) override;
   Any visitOfArrayExpr(TIPParser::OfArrayExprContext *ctx) override;
   Any visitOrExpr(TIPParser::OrExprContext *ctx) override;
+  Any visitArrayExpr(TIPParser::ArrayExprContext *ctx) override;
+  Any visitTernaryExpr(TIPParser::TernaryExprContext *ctx) override;
+  Any visitElementRefrenceOperatorExpr(TIPParser::ElementRefrenceOperatorExprContext *ctx) override;
+  Any visitArrayLengthExpr(TIPParser::ArrayLengthExprContext *ctx) override;
+  Any visitTrueExpr(TIPParser::TrueExprContext *ctx) override;
+  Any visitFalseExpr(TIPParser::FalseExprContext *ctx) override;
 };

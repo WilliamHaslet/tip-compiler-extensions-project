@@ -15,6 +15,9 @@ std::string ASTBuilder::opString(int op) {
   case TIPParser::MUL:
     opStr = "*";
     break;
+  case TIPParser::MOD:
+    opStr = "%";
+    break;
   case TIPParser::DIV:
     opStr = "/";
     break;
@@ -26,6 +29,15 @@ std::string ASTBuilder::opString(int op) {
     break;
   case TIPParser::GT:
     opStr = ">";
+    break;
+  case TIPParser::GTE:
+    opStr = ">=";
+    break;
+  case TIPParser::LT:
+    opStr = "<";
+    break;
+  case TIPParser::LTE:
+    opStr = "<=";
     break;
   case TIPParser::EQ:
     opStr = "==";
@@ -476,6 +488,78 @@ Any ASTBuilder::visitAssignStmt(TIPParser::AssignStmtContext *ctx) {
   visitedStmt->setLocation(ctx->getStart()->getLine(), 
                            ctx->getStart()->getCharPositionInLine());
     return "";
+}
+
+Any ASTBuilder::visitArrayExpr(TIPParser::ArrayExprContext *ctx) {
+  std::vector<std::unique_ptr<ASTExpr>> entries;
+  for (auto fn : ctx->expr()) {
+    visit(fn);
+    entries.push_back(std::move(visitedExpr));
+  }
+
+  visitedExpr = std::make_unique<ASTArrayExpr>(std::move(entries));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), 
+                           ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitTernaryExpr(TIPParser::TernaryExprContext *ctx) {
+    visit(ctx->expr(0));
+    auto cond = std::move(visitedExpr);
+    visit(ctx->expr(1));
+    auto then = std::move(visitedExpr);
+    visit(ctx->expr(2));
+    auto rElse = std::move(visitedExpr);
+    visitedExpr = std::make_unique<ASTTernaryExpr>(std::move(cond), std::move(then), std::move(rElse));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), 
+                           ctx->getStart()->getCharPositionInLine());
+    return "";
+}
+
+Any ASTBuilder::visitElementRefrenceOperatorExpr(TIPParser::ElementRefrenceOperatorExprContext *ctx) {
+    visit(ctx->expr(0));
+    auto array = std::move(visitedExpr);
+    visit(ctx->expr(1));
+    auto index = std::move(visitedExpr);
+    visitedExpr = std::make_unique<ASTElementRefrenceOperatorExpr>(std::move(array), std::move(index));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), 
+                           ctx->getStart()->getCharPositionInLine());
+    return "";
+}
+
+Any ASTBuilder::visitArrayLengthExpr(TIPParser::ArrayLengthExprContext *ctx) {
+    visit(ctx->expr());
+    auto array = std::move(visitedExpr);
+    visitedExpr = std::make_unique<ASTArrayLengthExpr>(std::move(array));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), 
+                           ctx->getStart()->getCharPositionInLine());
+    return "";
+}
+
+Any ASTBuilder::visitTrueExpr(TIPParser::TrueExprContext *ctx) {
+  visitedExpr = std::make_unique<ASTTrueExpr>();
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), 
+                           ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitFalseExpr(TIPParser::FalseExprContext *ctx) {
+  visitedExpr = std::make_unique<ASTFalseExpr>();
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), 
+                           ctx->getStart()->getCharPositionInLine());
+  return "";
 }
 
 std::string ASTBuilder::generateSHA256(std::string tohash) {
