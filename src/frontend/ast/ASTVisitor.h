@@ -68,5 +68,17 @@ public:
   virtual void endVisit(ASTErrorStmt * element) {}
   virtual bool visit(ASTBlockStmt * element) { return true; }
   virtual void endVisit(ASTBlockStmt * element) {}
+  virtual bool visit(ASTTernaryExpr * element) { return true; }
+  virtual void endVisit(ASTTernaryExpr * element) {}
+  virtual bool visit(ASTArrayExpr * element) { return true; }
+  virtual void endVisit(ASTArrayExpr * element) {}
+  virtual bool visit(ASTElementRefrenceOperatorExpr * element) { return true; }
+  virtual void endVisit(ASTElementRefrenceOperatorExpr * element) {}
+  virtual bool visit(ASTArrayLengthExpr * element) { return true; }
+  virtual void endVisit(ASTArrayLengthExpr * element) {}
+  virtual bool visit(ASTTrueExpr * element) { return true; }
+  virtual void endVisit(ASTTrueExpr * element) {}
+  virtual bool visit(ASTFalseExpr * element) { return true; }
+  virtual void endVisit(ASTFalseExpr * element) {}
 };
 

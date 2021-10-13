@@ -166,6 +166,9 @@ TEST_CASE("ASTPrinterTest: conditional expression printers", "[ASTNodePrint]") {
         if (x == y) x = 0;
         if (x != y) x = 0;
         if (x > y) x = 0;
+        if (x >= y) x = 0;
+        if (x <= y) x = 0;
+        if (x < y) x = 0;
         return 0;
       }
     )";
@@ -173,7 +176,10 @@ TEST_CASE("ASTPrinterTest: conditional expression printers", "[ASTNodePrint]") {
     std::vector<std::string> expected {
       "(x==y)",
       "(x!=y)",
-      "(x>y)"
+      "(x>y)",
+      "(x>=y)",
+      "(x<=y)",
+      "(x<y)"
     };
 
     auto ast = ASTHelper::build_ast(stream);
@@ -241,4 +247,49 @@ TEST_CASE("ASTPrinterTest: ASTProgram output is the hash of the source.", "[ASTN
   std::stringstream actualOutput;
   actualOutput << *ast;
   REQUIRE(expectedOutput == actualOutput.str());
+}
+
+
+//This test utilizes the print function for some of the added nodes and tests to see if they are correct
+// Tests ternary, true, false, array, array reference, and array length printers
+TEST_CASE("ASTPrinterTest: new node type printers", "[ASTNodePrint]") {
+    std::stringstream stream;
+    stream << R"(
+      fun() {
+        var v, w, x, y, z, a, b;
+        v = true;
+        w = false;
+        z = 5;
+        x = [2, 3, (24-10), z];
+        z = a%b;
+        a = x[2];
+        b = a ? z : #x;
+        return 0;
+      }
+    )";
+
+    std::vector<std::string> expected {
+      "true",
+      "false",
+      "5",
+      "[2, 3, (24-10), z]",
+      "(a%b)",
+      "(x[2])",
+      "(a ? z : (#x))",
+    };
+
+    auto ast = ASTHelper::build_ast(stream);
+
+    auto f = ast->findFunctionByName("fun");
+
+    int i = 0;
+    int numStmts = f->getStmts().size() - 1;  // skip the return
+    for (auto s : f->getStmts()) {
+      auto assnStmt = dynamic_cast<ASTAssignStmt*>(s);
+      stream = std::stringstream();
+      stream << *assnStmt->getRHS();
+      auto actual = stream.str();
+      REQUIRE(actual == expected.at(i++));
+      if (i == numStmts) break;
+    }
 }

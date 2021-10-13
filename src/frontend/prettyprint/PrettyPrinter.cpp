@@ -302,6 +302,62 @@ void PrettyPrinter::endVisit(ASTReturnStmt * element) {
   visitResults.push_back(indent() + "return " + argString + ";");
 }
 
+void PrettyPrinter::endVisit(ASTArrayExpr * element) {
+  /* 
+   * Skip printing of comma separator for last array element.
+   */ 
+  std::string entriesString = "";
+  bool skip = true;
+  for (auto &f : element->getEntries()) {
+    if (skip) {
+      entriesString = visitResults.back() + entriesString;
+      visitResults.pop_back();
+      skip = false;
+      continue;
+    }
+    entriesString = visitResults.back() + ", " + entriesString;
+    visitResults.pop_back();
+  } 
+
+  std::string arrayString = "[" + entriesString + "]";
+  visitResults.push_back(arrayString);
+}
+
+void PrettyPrinter::endVisit(ASTTernaryExpr * element) {
+  std::string elseString = visitResults.back();
+  visitResults.pop_back();
+  std::string thenString = visitResults.back();
+  visitResults.pop_back();
+  std::string condString = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(" + condString + " ? " + thenString + " : " + elseString + ")");
+}
+
+void PrettyPrinter::endVisit(ASTElementRefrenceOperatorExpr * element) {
+  std::string index = visitResults.back();
+  visitResults.pop_back();
+  std::string array = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(" + array + "[" + index + "])");
+}
+
+void PrettyPrinter::endVisit(ASTArrayLengthExpr * element) {
+  std::string array = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(#" + array + ")");
+}
+
+void PrettyPrinter::endVisit(ASTTrueExpr * element) {
+  visitResults.push_back("true");
+}
+
+void PrettyPrinter::endVisit(ASTFalseExpr * element) {
+  visitResults.push_back("false");
+}
+
 std::string PrettyPrinter::indent() const {
   return std::string(indentLevel*indentSize, indentChar);
 }

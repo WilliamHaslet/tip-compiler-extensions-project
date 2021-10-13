@@ -55,7 +55,19 @@ target_sources(
           ${CMAKE_CURRENT_SOURCE_DIR}/ASTVisitor.h
           ${CMAKE_CURRENT_SOURCE_DIR}/ASTBuilder.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/ASTBuilder.h
-          ${CMAKE_SOURCE_DIR}/externals/PicoSHA2/picosha2.h)
+          ${CMAKE_SOURCE_DIR}/externals/PicoSHA2/picosha2.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTArrayExpr.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTArrayExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTTernaryExpr.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTTernaryExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTElementRefrenceOperatorExpr.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTElementRefrenceOperatorExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTArrayLengthExpr.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTArrayLengthExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTTrueExpr.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTTrueExpr.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTFalseExpr.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTFalseExpr.h)
 target_include_directories(
   ast
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}

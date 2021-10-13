@@ -34,3 +34,10 @@
 #include "ASTStmt.h"
 #include "ASTVariableExpr.h"
 #include "ASTWhileStmt.h"
+#include "newtreetypes/ASTArrayExpr.h"
+#include "newtreetypes/ASTTernaryExpr.h"
+#include "newtreetypes/ASTElementRefrenceOperatorExpr.h"
+#include "newtreetypes/ASTArrayLengthExpr.h"
+#include "newtreetypes/ASTTrueExpr.h"
+#include "newtreetypes/ASTFalseExpr.h"
+
