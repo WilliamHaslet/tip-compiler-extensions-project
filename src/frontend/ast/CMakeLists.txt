@@ -59,10 +59,7 @@ target_sources(
 
           ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTAndExpr.h
           ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTAndExpr.cpp
-
-          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTArrayExpr.h
-          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTArrayExpr.cpp
-
+          
           ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTDecrementStmt.h
           ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/newtreetypes/ASTDecrementStmt.cpp
 

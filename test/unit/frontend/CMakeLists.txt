@@ -6,7 +6,8 @@ target_sources(
           ${CMAKE_CURRENT_SOURCE_DIR}/PrettyPrinterTest.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/ASTPrinterTest.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/ASTBuilderTest.cpp
-          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/ASTProgramTest.cpp)
+          ${CMAKE_CURRENT_SOURCE_DIR}/treetypes/ASTProgramTest.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/PrettyPrinterTestNew.cpp)
 target_include_directories(
   frontend_unit_tests
   PRIVATE ${CMAKE_SOURCE_DIR}/src/error

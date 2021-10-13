@@ -36,7 +36,6 @@
 #include "ASTWhileStmt.h"
 
 #include "newtreetypes/ASTAndExpr.h"
-#include "newtreetypes/ASTArrayExpr.h"
 #include "newtreetypes/ASTDecrementStmt.h"
 #include "newtreetypes/ASTForIterStmt.h"
 #include "newtreetypes/ASTForRangeStmt.h"

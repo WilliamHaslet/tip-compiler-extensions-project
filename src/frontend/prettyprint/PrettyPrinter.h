@@ -56,7 +56,6 @@ public:
   virtual void endVisit(ASTErrorStmt * element) override;
 
   virtual void endVisit(ASTAndExpr * element) override;
-  virtual void endVisit(ASTArrayExpr * element) override;
   virtual void endVisit(ASTDecrementStmt * element) override;
   virtual bool visit(ASTForIterStmt * element) override;
   virtual void endVisit(ASTForIterStmt * element) override;

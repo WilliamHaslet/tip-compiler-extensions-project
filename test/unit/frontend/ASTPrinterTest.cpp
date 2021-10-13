@@ -242,3 +242,48 @@ TEST_CASE("ASTPrinterTest: ASTProgram output is the hash of the source.", "[ASTN
   actualOutput << *ast;
   REQUIRE(expectedOutput == actualOutput.str());
 }
+
+TEST_CASE("ASTPrinterTest: new nodes test", "[ASTNodePrint]") {
+    std::stringstream stream;
+    stream << R"(
+      foo()
+      {
+        x = 3 and 4;
+        x--;
+        for (x : y){}
+        for (1 : 2 .. 3){}
+        for (1 : 2 .. 3 by 4){}
+        x++;
+        x = not 4;
+        x = [10 of 4];
+        x = 3 or 4;
+        return 0; 
+      }
+    )";
+
+    std::vector<std::string> expected {
+      "x = (3 and 4);",
+      "x--;",
+      "for (x : y) { }",
+      "for (1 : 2 .. 3) { }",
+      "for (1 : 2 .. 3 by 4) { }",
+      "x++;",
+      "x = not 4;",
+      "x = [10 of 4];",
+      "x = (3 or 4);",
+      "return 0;"
+    };
+
+    auto ast = ASTHelper::build_ast(stream);
+
+    auto f = ast->findFunctionByName("foo");
+
+    int i = 0;
+    for (auto s : f->getStmts()) {
+      stream = std::stringstream();
+      stream << *s;
+      auto actual = stream.str();
+      REQUIRE(actual == expected.at(i++));
+    }
+
+}

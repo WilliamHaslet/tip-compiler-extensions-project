@@ -315,23 +315,6 @@ void PrettyPrinter::endVisit(ASTAndExpr * element) {
   visitResults.push_back("(" + leftString + " and " + rightString + ")");
 }
 
-void PrettyPrinter::endVisit(ASTArrayExpr * element) {
-  std::string arrayString = "";
-  bool skip = true;
-  for (auto &f : element->getEntries()) {
-    if (skip) {
-      arrayString = visitResults.back() + arrayString;
-      visitResults.pop_back();
-      skip = false;
-      continue;
-    }
-    arrayString = visitResults.back() + ", " + arrayString;
-    visitResults.pop_back();
-  }
-
-  visitResults.push_back("[" + arrayString + "]");
-}
-
 void PrettyPrinter::endVisit(ASTDecrementStmt * element) {
   std::string e = visitResults.back();
   visitResults.pop_back();
@@ -365,8 +348,14 @@ bool PrettyPrinter::visit(ASTForRangeStmt * element) {
 void PrettyPrinter::endVisit(ASTForRangeStmt * element) {
   std::string bodyString = visitResults.back();
   visitResults.pop_back();
-  std::string four = visitResults.back();
-  visitResults.pop_back();
+
+  std::string fourString = "";
+  if (element->getFour() != nullptr)
+  {
+    fourString = visitResults.back();
+    visitResults.pop_back();
+  }
+
   std::string three = visitResults.back();
   visitResults.pop_back();
   std::string two = visitResults.back();
@@ -376,7 +365,15 @@ void PrettyPrinter::endVisit(ASTForRangeStmt * element) {
 
   indentLevel--;
 
-  std::string forString = indent() + "for (" + one + " : " + two + " .. " + three + " by " + four + ") \n" + bodyString;
+  std::string forString = indent() + "for (" + one + " : " + two + " .. " + three;
+  
+  if (element->getFour() != nullptr)
+  {
+    forString += " by " + fourString;
+  }
+
+  forString += ") \n" + bodyString;
+
   visitResults.push_back(forString);
 }
 

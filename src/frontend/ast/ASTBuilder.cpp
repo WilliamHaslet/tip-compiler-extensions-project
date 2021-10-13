@@ -537,14 +537,16 @@ Any ASTBuilder::visitForRangeStmt(TIPParser::ForRangeStmtContext *ctx)
 
   visit(ctx->expr(2));
   auto three = std::move(visitedExpr);
-
-  visit(ctx->expr(3));
-  auto four = std::move(visitedExpr);
+  
+  std::unique_ptr<ASTExpr> four = nullptr;
+  if (ctx->expr().size() == 4) {
+    visit(ctx->expr(3));
+    four = std::move(visitedExpr);
+  }
 
   visit(ctx->statement());
   auto body = std::move(visitedStmt);
-  visitedStmt = std::make_unique<ASTForRangeStmt>(std::move(one), std::move(two), 
-                std::move(three), std::move(four), std::move(body));
+  visitedStmt = std::make_unique<ASTForRangeStmt>(std::move(one), std::move(two), std::move(three), std::move(four), std::move(body));
 
   // Set source location 
   visitedStmt->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
@@ -558,6 +560,18 @@ Any ASTBuilder::visitIncrementStmt(TIPParser::IncrementStmtContext *ctx)
 
   // Set source location 
   visitedStmt->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
+  return "";
+}
+
+Any ASTBuilder::visitNotExpr(TIPParser::NotExprContext *ctx)
+{
+  visit(ctx->expr());
+  auto e = std::move(visitedExpr);
+
+  visitedExpr = std::make_unique<ASTNotExpr>(std::move(e));
+
+  // Set source location 
+  visitedExpr->setLocation(ctx->getStart()->getLine(), ctx->getStart()->getCharPositionInLine());
   return "";
 }
 

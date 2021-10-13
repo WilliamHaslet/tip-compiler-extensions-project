@@ -229,7 +229,6 @@ TEST_CASE("PrettyPrinter: Test while spacing", "[PrettyPrinter]") {
     REQUIRE(ppString == expected);
 }
 
-
 TEST_CASE("PrettyPrinter: Test funs and calls", "[PrettyPrinter]") {
     std::stringstream stream;
     stream << R"(fun(a){return a+1;}main() {output fun(9); return fun(1) + fun(2);})";

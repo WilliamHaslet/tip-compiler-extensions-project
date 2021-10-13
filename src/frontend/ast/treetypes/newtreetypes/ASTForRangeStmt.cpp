@@ -11,6 +11,8 @@ void ASTForRangeStmt::accept(ASTVisitor * visitor) {
     {
       getFour()->accept(visitor);
     }
+
+    getBody()->accept(visitor);
   }
   visitor->endVisit(this);
 }
@@ -20,14 +22,15 @@ llvm::Value* ASTForRangeStmt::codegen()
   return nullptr;
 }
 
-std::ostream& ASTForRangeStmt::print(std::ostream &out) const {
+std::ostream& ASTForRangeStmt::print(std::ostream &out) const
+{
+  out << "for (" << *getOne() << " : " << *getTwo() << " .. " << *getThree();
+  
   if (getFour() != nullptr)
   {
-    out << "for (" << *getOne() << " : " << *getTwo() << " .. " << *getThree() << " by " << *getFour() << ") " << *getBody();
+    out << " by " << *getFour();
   }
-  else
-  {
-    out << "for (" << *getOne() << " : " << *getTwo() << " .. " << *getThree() << ") " << *getBody();
-  }
+
+  out << ") " << *getBody();
   return out;
 }

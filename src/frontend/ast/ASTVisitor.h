@@ -71,10 +71,7 @@ public:
 
   virtual bool visit(ASTAndExpr * element) { return true; }
   virtual void endVisit(ASTAndExpr * element) {}
-
-  virtual bool visit(ASTArrayExpr * element) { return true; }
-  virtual void endVisit(ASTArrayExpr * element) {}
-
+  
   virtual bool visit(ASTDecrementStmt * element) { return true; }
   virtual void endVisit(ASTDecrementStmt * element) {}
 
