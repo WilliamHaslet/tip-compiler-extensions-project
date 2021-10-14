@@ -61,4 +61,20 @@ public:
   Any visitOutputStmt(TIPParser::OutputStmtContext *ctx) override;
   Any visitErrorStmt(TIPParser::ErrorStmtContext *ctx) override;
   Any visitReturnStmt(TIPParser::ReturnStmtContext *ctx) override;
+
+  Any visitAndExpr(TIPParser::AndExprContext *ctx) override;
+  Any visitDecrementStmt(TIPParser::DecrementStmtContext *ctx) override;
+  Any visitForIterStmt(TIPParser::ForIterStmtContext *ctx) override;
+  Any visitForRangeStmt(TIPParser::ForRangeStmtContext *ctx) override;
+  Any visitIncrementStmt(TIPParser::IncrementStmtContext *ctx) override;
+  Any visitNegationExpr(TIPParser::NegationExprContext *ctx) override;
+  Any visitNotExpr(TIPParser::NotExprContext *ctx) override;
+  Any visitOfArrayExpr(TIPParser::OfArrayExprContext *ctx) override;
+  Any visitOrExpr(TIPParser::OrExprContext *ctx) override;
+  Any visitArrayExpr(TIPParser::ArrayExprContext *ctx) override;
+  Any visitTernaryExpr(TIPParser::TernaryExprContext *ctx) override;
+  Any visitElementRefrenceOperatorExpr(TIPParser::ElementRefrenceOperatorExprContext *ctx) override;
+  Any visitArrayLengthExpr(TIPParser::ArrayLengthExprContext *ctx) override;
+  Any visitTrueExpr(TIPParser::TrueExprContext *ctx) override;
+  Any visitFalseExpr(TIPParser::FalseExprContext *ctx) override;
 };

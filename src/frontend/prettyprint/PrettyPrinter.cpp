@@ -302,7 +302,171 @@ void PrettyPrinter::endVisit(ASTReturnStmt * element) {
   visitResults.push_back(indent() + "return " + argString + ";");
 }
 
+void PrettyPrinter::endVisit(ASTArrayExpr * element) {
+  /* 
+   * Skip printing of comma separator for last array element.
+   */ 
+  std::string entriesString = "";
+  bool skip = true;
+  for (auto &f : element->getEntries()) {
+    if (skip) {
+      entriesString = visitResults.back() + entriesString;
+      visitResults.pop_back();
+      skip = false;
+      continue;
+    }
+    entriesString = visitResults.back() + ", " + entriesString;
+    visitResults.pop_back();
+  } 
+
+  std::string arrayString = "[" + entriesString + "]";
+  visitResults.push_back(arrayString);
+}
+
+void PrettyPrinter::endVisit(ASTTernaryExpr * element) {
+  std::string elseString = visitResults.back();
+  visitResults.pop_back();
+  std::string thenString = visitResults.back();
+  visitResults.pop_back();
+  std::string condString = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(" + condString + " ? " + thenString + " : " + elseString + ")");
+}
+
+void PrettyPrinter::endVisit(ASTElementRefrenceOperatorExpr * element) {
+  std::string index = visitResults.back();
+  visitResults.pop_back();
+  std::string array = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(" + array + "[" + index + "])");
+}
+
+void PrettyPrinter::endVisit(ASTArrayLengthExpr * element) {
+  std::string array = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(#" + array + ")");
+}
+
+void PrettyPrinter::endVisit(ASTTrueExpr * element) {
+  visitResults.push_back("true");
+}
+
+void PrettyPrinter::endVisit(ASTFalseExpr * element) {
+  visitResults.push_back("false");
+}
+
 std::string PrettyPrinter::indent() const {
   return std::string(indentLevel*indentSize, indentChar);
 }
 
+void PrettyPrinter::endVisit(ASTAndExpr * element) {
+  std::string rightString = visitResults.back();
+  visitResults.pop_back();
+  std::string leftString = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(" + leftString + " and " + rightString + ")");
+}
+
+void PrettyPrinter::endVisit(ASTDecrementStmt * element) {
+  std::string e = visitResults.back();
+  visitResults.pop_back();
+  visitResults.push_back(indent() + e + "--;");
+}
+
+bool PrettyPrinter::visit(ASTForIterStmt * element) {
+  indentLevel++;
+  return true;
+}
+
+void PrettyPrinter::endVisit(ASTForIterStmt * element) {
+  std::string bodyString = visitResults.back();
+  visitResults.pop_back();
+  std::string right = visitResults.back();
+  visitResults.pop_back();
+  std::string left = visitResults.back();
+  visitResults.pop_back();
+
+  indentLevel--;
+
+  std::string forString = indent() + "for (" + left + " : " + right + ") \n" + bodyString;
+  visitResults.push_back(forString);
+}
+
+bool PrettyPrinter::visit(ASTForRangeStmt * element) {
+  indentLevel++;
+  return true;
+}
+
+void PrettyPrinter::endVisit(ASTForRangeStmt * element) {
+  std::string bodyString = visitResults.back();
+  visitResults.pop_back();
+
+  std::string fourString = "";
+  if (element->getFour() != nullptr)
+  {
+    fourString = visitResults.back();
+    visitResults.pop_back();
+  }
+
+  std::string three = visitResults.back();
+  visitResults.pop_back();
+  std::string two = visitResults.back();
+  visitResults.pop_back();
+  std::string one = visitResults.back();
+  visitResults.pop_back();
+
+  indentLevel--;
+
+  std::string forString = indent() + "for (" + one + " : " + two + " .. " + three;
+  
+  if (element->getFour() != nullptr)
+  {
+    forString += " by " + fourString;
+  }
+
+  forString += ") \n" + bodyString;
+
+  visitResults.push_back(forString);
+}
+
+void PrettyPrinter::endVisit(ASTIncrementStmt * element) {
+  std::string e = visitResults.back();
+  visitResults.pop_back();
+  visitResults.push_back(indent() + e + "++;");
+}
+
+void PrettyPrinter::endVisit(ASTNegationExpr * element) {
+  std::string e = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("-(" + e + ")");
+}
+
+void PrettyPrinter::endVisit(ASTNotExpr * element) {
+  std::string e = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(not " + e + ")");
+}
+
+void PrettyPrinter::endVisit(ASTOfArrayExpr * element) {
+  std::string rightString = visitResults.back();
+  visitResults.pop_back();
+  std::string leftString = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("[" + leftString + " of " + rightString + "]");
+}
+
+void PrettyPrinter::endVisit(ASTOrExpr * element) {
+  std::string rightString = visitResults.back();
+  visitResults.pop_back();
+  std::string leftString = visitResults.back();
+  visitResults.pop_back();
+
+  visitResults.push_back("(" + leftString + " or " + rightString + ")");
+}
