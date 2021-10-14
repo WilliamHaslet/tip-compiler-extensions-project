@@ -254,7 +254,7 @@ prog() { var x, y, z; x = [ 2, 3, 4, 5 ]; y = x[2]; return y; })";
 TEST_CASE("PrettyPrinter: Test array length operator", "[PrettyPrinter]") {
     std::stringstream stream;
     stream << R"(
-prog() { var x, y, z; x = [ 2, 3, 4, 5 ]; y = # x; return y; })";
+prog() { var x, y, z; x = [ 2, 3, 4, 5 ]; y = #x; return y; })";
 
     std::string expected = R"(prog() 
 {
