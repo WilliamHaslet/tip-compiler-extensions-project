@@ -210,7 +210,7 @@ TEST_CASE("PrettyPrinter: Test or", "[PrettyPrinter]") {
 TEST_CASE("PrettyPrinter: Test array expression", "[PrettyPrinter]") {
     std::stringstream stream;
     stream << R"(
-prog() { var x, y, z; x = [ 2, 3, 4, 5 ]; y = [ 43-10, z+x, 12] return x; })";
+prog() { var x, y, z; x = [ 2, 3, 4, 5 ]; y = [ 43-10, z+x, 12]; return x; })";
 
     std::string expected = R"(prog() 
 {
