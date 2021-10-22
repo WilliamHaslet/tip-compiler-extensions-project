@@ -53,6 +53,40 @@ public:
     void endVisit(ASTRefExpr * element) override;
     void endVisit(ASTWhileStmt * element) override;
 
+    void endVisit(ASTTrueExpr * element) override;
+    void endVisit(ASTFalseExpr * element) override;
+    void endVisit(ASTNotExpr * element) override;
+    void endVisit(ASTAndExpr * element) override;
+    void endVisit(ASTOrExpr * element) override;
+    void endVisit(ASTIncrementStmt * element) override;
+    void endVisit(ASTDecrementStmt * element) override;
+    //void endVisit(ASTForIterStmt * element) override;
+    void endVisit(ASTForRangeStmt * element) override;
+    void endVisit(ASTTernaryExpr * element) override;
+    void endVisit(ASTOfArrayExpr * element) override;
+
+    // true
+    // false
+    // not
+    // and
+    // or
+    // E1++
+    // E1--
+    // for (E1 : E2)                // not done
+    // for (E1 : E2 .. E3 by E4)
+    // E1 ? E2 : E3
+    // [E1 of E2]
+
+    // [E1, ..., En]
+    // E1[E2]
+    // #[]
+    // -(E1)
+
+    // %
+    // >=
+    // <
+    // <=
+
 protected:
     std::unique_ptr<ConstraintHandler> constraintHandler;
 
