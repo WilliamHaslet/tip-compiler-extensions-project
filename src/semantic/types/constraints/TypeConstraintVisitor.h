@@ -52,8 +52,7 @@ public:
     void endVisit(ASTRecordExpr * element) override;
     void endVisit(ASTRefExpr * element) override;
     void endVisit(ASTWhileStmt * element) override;
-    void endVisit(ASTTrueExpr * element) override;
-    void endVisit(ASTFalseExpr * element) override;
+    
     void endVisit(ASTElementRefrenceOperatorExpr * element) override;
     void endVisit(ASTArrayLengthExpr * element) override;
     void endVisit(ASTArrayExpr * element) override;

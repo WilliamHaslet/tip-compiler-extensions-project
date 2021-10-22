@@ -27,8 +27,6 @@ public:
   virtual void endVisit(TipAlpha * element) {}
   virtual bool visit(TipFunction * element) { return true; }
   virtual void endVisit(TipFunction * element) {}
-  virtual bool visit(TipBool * element) { return true; }
-  virtual void endVisit(TipBool * element) {}
   virtual bool visit(TipInt * element) { return true; }
   virtual void endVisit(TipInt * element) {}
   virtual bool visit(TipMu * element) { return true; }
