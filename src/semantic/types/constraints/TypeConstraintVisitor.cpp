@@ -6,6 +6,8 @@
 #include "TipRecord.h"
 #include "TipAbsentField.h"
 #include "TipInt.h"
+#include "TipBool.h"
+#include "TipArray.h"
 
 TypeConstraintVisitor::TypeConstraintVisitor(SymbolTable* st, std::unique_ptr<ConstraintHandler> handler)
   : symbolTable(st), constraintHandler(std::move(handler)) {};
@@ -276,4 +278,81 @@ void TypeConstraintVisitor::endVisit(ASTAccessExpr * element) {
 void TypeConstraintVisitor::endVisit(ASTErrorStmt * element) {
   constraintHandler->handle(astToVar(element->getArg()), std::make_shared<TipInt>());
 }
+
+/*! \brief Type constraints for true expression.
+ *
+ * Type rules for "E":  
+ *   [[E]] = bool
+ */
+void TypeConstraintVisitor::endVisit(ASTTrueExpr * element) {
+    constraintHandler->handle(astToVar(element), std::make_shared<TipBool>());
+}
+
+/*! \brief Type constraints for false expression.
+ *
+ * Type rules for "E":  
+ *   [[E]] = bool
+ */
+void TypeConstraintVisitor::endVisit(ASTFalseExpr * element) {
+    constraintHandler->handle(astToVar(element), std::make_shared<TipBool>());
+}
+
+/*! \brief Type constraints for array expression.
+ *
+ * Type rule for "[E1, E2, E3, ..., En]":
+ *   [[[E1, E2, E3, ..., En]]] = array
+ * [[E1]] = [[E2]] = ... = [[En]]
+ */
+void TypeConstraintVisitor::endVisit(ASTArrayExpr * element) {
+  std::vector<ASTExpr*> entries = element->getEntries();
+  if (entries.size()==0) {
+    constraintHandler->handle(astToVar(element), 
+                    std::make_shared<TipArray>(std::make_shared<TipAlpha>(element)));
+  }
+  else {
+    auto firstType = astToVar(entries[0]);
+    for (auto &e : element->getEntries()) {
+      constraintHandler->handle(astToVar(e), firstType);
+    } 
+    constraintHandler->handle(astToVar(element), std::make_shared<TipArray>(firstType));
+  }
+}
+
+/*! \brief Type constraints for array element reference expression.
+ *
+ * Type rule for "E1[E2]":
+ *   [[E1[E2]]] = the type of the elements in the array E1
+ * [[E2]] = int
+ */
+void TypeConstraintVisitor::endVisit(ASTElementRefrenceOperatorExpr * element) {
+  auto arr = dynamic_cast<ASTArrayExpr*>(element->getArray());
+  auto entries = arr->getEntries();
+  auto firstType = astToVar(entries[0]);
+  constraintHandler->handle(astToVar(element), firstType);
+  constraintHandler->handle(astToVar(element->getIndex()), std::make_shared<TipInt>());
+}
+
+/*! \brief Type constraints for negation expression.
+ *
+ * Type rules for "-(E)":  
+ *   [[E]] = int
+ */
+void TypeConstraintVisitor::endVisit(ASTNegationExpr * element) {
+    constraintHandler->handle(astToVar(element->getExpr()), std::make_shared<TipInt>());
+}
+
+/*! \brief Type constraints for array length expression.
+ *
+ * Type rules for "#E":  
+ *   [[E]] = array
+ */
+void TypeConstraintVisitor::endVisit(ASTArrayLengthExpr * element) {
+    constraintHandler->handle(astToVar(element->getArray()), 
+                    std::make_shared<TipArray>(std::make_shared<TipAlpha>(element)));
+}
+
+
+
+
+
 
