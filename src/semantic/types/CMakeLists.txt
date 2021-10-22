@@ -27,6 +27,10 @@ target_sources(
     ${CMAKE_CURRENT_SOURCE_DIR}/concrete/TipType.h
     ${CMAKE_CURRENT_SOURCE_DIR}/concrete/TipVar.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/concrete/TipVar.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concrete/TipBool.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concrete/TipBool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/concrete/TipArray.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/concrete/TipArray.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/concrete/TipTypeVisitor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/constraints/ConstraintCollector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/constraints/ConstraintCollector.h

@@ -7,7 +7,11 @@
 /*!
  * \class TipBool
  *
+<<<<<<< HEAD
  * \brief A proper type representing an bool
+=======
+ * \brief A proper type representing a bool
+>>>>>>> f9e11898a1f4d22cfa5b6b768c25d875a70820e3
  */
 class TipBool: public TipCons {
 public:
@@ -20,5 +24,9 @@ public:
 
 protected:
     std::ostream& print(std::ostream &out) const override;
+<<<<<<< HEAD
 };
 
+=======
+};
+>>>>>>> f9e11898a1f4d22cfa5b6b768c25d875a70820e3
