@@ -14,6 +14,6 @@ llvm::Value* ASTNotExpr::codegen()
 }
 
 std::ostream& ASTNotExpr::print(std::ostream &out) const {
-  out << "not " << *getExpr();
+  out << "(not " << *getExpr() << ")";
   return out;
 }

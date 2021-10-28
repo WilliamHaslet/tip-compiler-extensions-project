@@ -428,3 +428,15 @@ TEST_CASE("Unifier: Test closing mu ", "[Unifier]") {
 
     REQUIRE_NOTHROW(ss.str() == "\u03bc\u03B1<f>.(\u03B1<f>,int) -> int");
 }
+
+TEST_CASE("Unifier: Test unifying proper types with a type ", "[Unifier]") {
+    ASTVariableExpr variableExpr("foo");
+    auto tipVar = std::make_shared<TipVar>(&variableExpr);
+    auto tipInt = std::make_shared<TipInt>();
+
+    TypeConstraint constraint(tipVar, tipInt);
+    std::vector<TypeConstraint> constraints {constraint};
+
+    Unifier unifier(constraints);
+    REQUIRE_NOTHROW(unifier.unify(tipVar, tipInt));
+}

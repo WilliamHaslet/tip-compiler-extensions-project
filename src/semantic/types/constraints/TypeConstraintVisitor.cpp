@@ -97,15 +97,25 @@ void TypeConstraintVisitor::endVisit(ASTNumberExpr * element) {
 void TypeConstraintVisitor::endVisit(ASTBinaryExpr * element) {
   auto op = element->getOp();
   auto intType = std::make_shared<TipInt>();
+  auto boolType = std::make_shared<TipBool>();
 
-  // result type is integer
-  constraintHandler->handle(astToVar(element), intType);
-
-  if (op != "==" && op != "!=") {
+  if (op == ">" || op == ">=" || op == "<" || op == "<=") {
+    // result is bool
+    constraintHandler->handle(astToVar(element), boolType);
     // operands are integer
     constraintHandler->handle(astToVar(element->getLeft()), intType);
     constraintHandler->handle(astToVar(element->getRight()), intType);
-  } else {
+  }
+  else if (op != "==" && op != "!=") {
+    // result is int
+    constraintHandler->handle(astToVar(element), intType);
+    // operands are integer
+    constraintHandler->handle(astToVar(element->getLeft()), intType);
+    constraintHandler->handle(astToVar(element->getRight()), intType);
+  }
+  else {
+    // result is bool
+    constraintHandler->handle(astToVar(element), boolType);
     // operands have the same type
     constraintHandler->handle(astToVar(element->getLeft()), astToVar(element->getRight()));
   }
@@ -348,6 +358,29 @@ void TypeConstraintVisitor::endVisit(ASTIncrementStmt * element) {
  */
 void TypeConstraintVisitor::endVisit(ASTDecrementStmt * element) {
   constraintHandler->handle(astToVar(element->getArg()), std::make_shared<TipInt>());
+}
+
+/*! \brief Type constraints for range for loop.
+ *
+ * Type rules for "for (E1 : E2) S":
+ *   [[E1]] = type of the elements in E2
+ *   [[E2]] = array
+ *
+ */
+void TypeConstraintVisitor::endVisit(ASTForIterStmt * element) {
+  /*std::vector<ASTExpr*> entries = dynamic_cast<ASTArrayExpr*>(element->getRight())->getEntries();
+
+  if (entries.size()==0)
+  {
+    constraintHandler->handle(astToVar(element->getLeft()), std::make_shared<TipAlpha>());
+    constraintHandler->handle(astToVar(element->getRight()), std::make_shared<TipArray>(std::make_shared<TipAlpha>()));
+  }
+  else
+  {
+    auto firstType = astToVar(entries[0]);
+    constraintHandler->handle(astToVar(element->getLeft()), firstType);
+    constraintHandler->handle(astToVar(element->getRight()), std::make_shared<TipArray>());
+  }*/
 }
 
 /*! \brief Type constraints for range for loop.
