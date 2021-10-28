@@ -375,3 +375,132 @@ main() {
 
     runtest(program, expected);
 }
+
+TEST_CASE("TypeConstraintVisitor: array", "[TypeConstraintVisitor]") {
+    std::stringstream program;
+    program << R"(
+      bar() {
+        var x;
+        x = [1,2,3];
+        return 0;
+      }
+    )";
+
+    std::vector<std::string> expected {
+      "\u27E61@4:13\u27E7 = int", //array elements are integer constants
+      "\u27E62@4:15\u27E7 = int",
+      "\u27E63@4:17\u27E7 = int",
+      "\u27E61@4:13\u27E7 = \u27E61@4:13\u27E7", //array elements are integer constants
+      "\u27E62@4:15\u27E7 = \u27E61@4:13\u27E7",
+      "\u27E63@4:17\u27E7 = \u27E61@4:13\u27E7",
+      "\u27E6[1, 2, 3]@4:12\u27E7 = [] \u27E61@4:13\u27E7",
+      "\u27E6x@3:12\u27E7 = \u27E6[1, 2, 3]@4:12\u27E7",  	// sides of assignment have same type
+      "\u27E60@5:15\u27E7 = int",        	// int constant
+      "\u27E6bar@2:6\u27E7 = () -> \u27E60@5:15\u27E7"	// function type
+    };
+
+    runtest(program, expected);
+}
+
+
+TEST_CASE("TypeConstraintVisitor: element reference", "[TypeConstraintVisitor]") {
+    std::stringstream program;
+    program << R"(
+      bar() {
+        var x, y;
+        x = [1,2,3];
+        y = x[0];
+        return 0;
+      }
+    )";
+
+    std::vector<std::string> expected {
+      "\u27E61@4:13\u27E7 = int", //array elements are integer constants
+      "\u27E62@4:15\u27E7 = int",
+      "\u27E63@4:17\u27E7 = int",
+      "\u27E61@4:13\u27E7 = \u27E61@4:13\u27E7", //array elements are integer constants
+      "\u27E62@4:15\u27E7 = \u27E61@4:13\u27E7",
+      "\u27E63@4:17\u27E7 = \u27E61@4:13\u27E7",
+      "\u27E6[1, 2, 3]@4:12\u27E7 = [] \u27E61@4:13\u27E7",
+      "\u27E6x@3:12\u27E7 = \u27E6[1, 2, 3]@4:12\u27E7",  	// sides of assignment have same type
+      "\u27E60@5:14\u27E7 = int",
+      "\u27E6x@3:12\u27E7 = [] \u27E6(x[0])@5:12\u27E7",
+      "\u27E60@5:14\u27E7 = int",
+      "\u27E6y@3:15\u27E7 = \u27E6(x[0])@5:12\u27E7",
+      "\u27E60@6:15\u27E7 = int",        	// int constant
+      "\u27E6bar@2:6\u27E7 = () -> \u27E60@6:15\u27E7"	// function type
+    };
+
+    runtest(program, expected);
+}
+
+
+TEST_CASE("TypeConstraintVisitor: negation expression", "[TypeConstraintVisitor]") {
+    std::stringstream program;
+    program << R"(
+      bar() {
+        var x, y;
+        x = 5;
+        y = -x;
+        return y;
+      }
+    )";
+
+    std::vector<std::string> expected {
+            "\u27E65@4:12\u27E7 = int",
+            "\u27E6x@3:12\u27E7 = \u27E65@4:12\u27E7",
+            "\u27E6-(x)@5:12\u27E7 = int",
+            "\u27E6x@3:12\u27E7 = int",
+            "\u27E6y@3:15\u27E7 = \u27E6-(x)@5:12\u27E7",
+            "\u27E6bar@2:6\u27E7 = () -> \u27E6y@3:15\u27E7"
+    };
+
+    runtest(program, expected);
+}
+
+TEST_CASE("TypeConstraintVisitor: array length", "[TypeConstraintVisitor]") {
+    std::stringstream program;
+    program << R"(
+      bar() {
+        var x;
+        x = [1,2,3];
+        return #x;
+      }
+    )";
+
+    std::vector<std::string> expected {
+      "\u27E61@4:13\u27E7 = int", //array elements are integer constants
+      "\u27E62@4:15\u27E7 = int",
+      "\u27E63@4:17\u27E7 = int",
+      "\u27E61@4:13\u27E7 = \u27E61@4:13\u27E7", //array elements should all be equivalent with regard to type
+      "\u27E62@4:15\u27E7 = \u27E61@4:13\u27E7",
+      "\u27E63@4:17\u27E7 = \u27E61@4:13\u27E7",
+      "\u27E6[1, 2, 3]@4:12\u27E7 = [] \u27E61@4:13\u27E7",
+      "\u27E6x@3:12\u27E7 = \u27E6[1, 2, 3]@4:12\u27E7",  	// sides of assignment have same type
+      "\u27E6(#x)@5:15\u27E7 = int",
+      "\u27E6x@3:12\u27E7 = [] \u03B1<(#x)>",
+      "\u27E6bar@2:6\u27E7 = () -> \u27E6(#x)@5:15\u27E7"	// function type
+    };
+
+    runtest(program, expected);
+}
+
+TEST_CASE("TypeConstraintVisitor: empty array", "[TypeConstraintVisitor]") {
+    std::stringstream program;
+    program << R"(
+      bar() {
+        var x;
+        x = [];
+        return 0;
+      }
+    )";
+
+    std::vector<std::string> expected {
+            "\u27E6[]@4:12\u27E7 = [] \u03B1<[]>",
+            "\u27E6x@3:12\u27E7 = \u27E6[]@4:12\u27E7",
+            "\u27E60@5:15\u27E7 = int",
+            "\u27E6bar@2:6\u27E7 = () -> \u27E60@5:15\u27E7"
+    };
+
+    runtest(program, expected);
+}

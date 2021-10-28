@@ -251,6 +251,108 @@ poly(p){
         REQUIRE_NOTHROW(ast->accept(&visitor));
     }
 
+    SECTION("Test type-safe array") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = [x, y, z];
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test negation operator") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y;
+              x = 1;
+              y = -x;
+              return y;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-safe element reference") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = [1, 2, 3];
+              return w[0];
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-safe function application") {
+        std::stringstream program;
+        program << R"(
+            foo(x) {
+                return null;
+            }
+
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = foo(x);
+              return w;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-safe array length") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = [x, y, z];
+              return #w;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
     SECTION("Test unification error 1") {
         std::stringstream program;
         program << R"(
