@@ -6,22 +6,15 @@ TipArray::TipArray(std::shared_ptr<TipType> arrayType)
 
 
 std::ostream& TipArray::print(std::ostream &out) const {
-    out << "[";
-    bool first = true;
+    out << "[] ";
     for(auto &init : arguments) {
-        if(first) {
-            out << *init;
-            first = false;
-            continue;
-        }
-        out << "," << *init;
+        out << *init;
     }
-    out << "]";
     return out;
 }
 
-// This does not obey the semantics of alpha init values 
 bool TipArray::operator==(const TipType &other) const {
+    /*
     auto tipArray = dynamic_cast<const TipArray *>(&other);
     if(!tipArray) {
         return false;
@@ -38,14 +31,22 @@ bool TipArray::operator==(const TipType &other) const {
     }
 
     return true;
+    */
+
+    auto otherTipArray = dynamic_cast<const TipArray *>(&other);
+    if(!otherTipArray) {
+        return false;
+    }
+
+    return *arguments.front() == *otherTipArray->getType();
 }
 
 bool TipArray::operator!=(const TipType &other) const {
     return !(*this == other);
 }
 
-std::vector<std::shared_ptr<TipType>>& TipArray::getTypes() {
-    return arguments;
+std::shared_ptr<TipType> TipArray::getType() const{
+    return arguments.front();
 }
 
 

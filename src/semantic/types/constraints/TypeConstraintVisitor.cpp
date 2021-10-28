@@ -275,7 +275,7 @@ void TypeConstraintVisitor::endVisit(ASTAccessExpr * element) {
     } else {
       fieldTypes.push_back(std::make_shared<TipAlpha>(element, f));
     }
-  } 
+  }
   constraintHandler->handle(astToVar(element->getRecord()),
                             std::make_shared<TipRecord>(fieldTypes, allFields));
 }
@@ -444,11 +444,11 @@ void TypeConstraintVisitor::endVisit(ASTArrayExpr * element) {
                     std::make_shared<TipArray>(std::make_shared<TipAlpha>(element)));
   }
   else {
-    auto firstType = astToVar(entries[0]);
+    auto arrayType = astToVar(entries[0]);
     for (auto &e : element->getEntries()) {
-      constraintHandler->handle(astToVar(e), firstType);
+      constraintHandler->handle(astToVar(e), arrayType);
     } 
-    constraintHandler->handle(astToVar(element), std::make_shared<TipArray>(firstType));
+    constraintHandler->handle(astToVar(element), std::make_shared<TipArray>(arrayType));
   }
 }
 
@@ -456,13 +456,11 @@ void TypeConstraintVisitor::endVisit(ASTArrayExpr * element) {
  *
  * Type rule for "E1[E2]":
  *   [[E1[E2]]] = the type of the elements in the array E1
+ * [[E1]] = [[E1[E2]]][]
  * [[E2]] = int
  */
 void TypeConstraintVisitor::endVisit(ASTElementRefrenceOperatorExpr * element) {
-  auto arr = dynamic_cast<ASTArrayExpr*>(element->getArray());
-  auto entries = arr->getEntries();
-  auto firstType = astToVar(entries[0]);
-  constraintHandler->handle(astToVar(element), firstType);
+  constraintHandler->handle(astToVar(element->getArray()), std::make_shared<TipArray>(astToVar(element)));
   constraintHandler->handle(astToVar(element->getIndex()), std::make_shared<TipInt>());
 }
 
@@ -472,15 +470,18 @@ void TypeConstraintVisitor::endVisit(ASTElementRefrenceOperatorExpr * element) {
  *   [[E]] = int
  */
 void TypeConstraintVisitor::endVisit(ASTNegationExpr * element) {
+    constraintHandler->handle(astToVar(element), std::make_shared<TipInt>());
     constraintHandler->handle(astToVar(element->getExpr()), std::make_shared<TipInt>());
 }
 
 /*! \brief Type constraints for array length expression.
  *
  * Type rules for "#E":  
+ *   [[#E]] = int
  *   [[E]] = array
  */
 void TypeConstraintVisitor::endVisit(ASTArrayLengthExpr * element) {
+    constraintHandler->handle(astToVar(element), std::make_shared<TipInt>());
     constraintHandler->handle(astToVar(element->getArray()), 
                     std::make_shared<TipArray>(std::make_shared<TipAlpha>(element)));
 }
