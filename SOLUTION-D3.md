@@ -5,9 +5,8 @@ Ruthvik Gajjala
 
 ### Overview of what we added for deliverable 2
 
-For deliverable three, we implemented type constraints for all the AST nodes that we added in the previous deliverable, added assignablity checking for  
-the relevant AST nodes, and implemented new tip types for arrays and booleans. For all the new code we added, we wrote unit tests that check correct and
-incorrect uses of types and fully covered all the new code we wrote.
+For deliverable three, we implemented type constraints for all the AST nodes that we added in the previous deliverable, added assignablity 
+checking for the relevant AST nodes, and implemented new tip types for arrays and booleans. For all the new code we added, we wrote unit tests that check correct and incorrect uses of types and fully covered all the new code we wrote.
 
 ### Tricky aspects of our solution
 
