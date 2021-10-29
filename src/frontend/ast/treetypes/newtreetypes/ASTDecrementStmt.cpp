@@ -8,11 +8,6 @@ void ASTDecrementStmt::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTDecrementStmt::codegen()
-{
-  return nullptr;
-}
-
 std::ostream& ASTDecrementStmt::print(std::ostream &out) const {
   out << *getArg() << "--;";
   return out;

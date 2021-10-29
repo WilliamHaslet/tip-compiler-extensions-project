@@ -15,10 +15,6 @@ void ASTArrayExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTArrayExpr::codegen(){
-  return nullptr;
-}
-
 std::ostream& ASTArrayExpr::print(std::ostream &out) const {
   out << "[";
   bool skip = true;

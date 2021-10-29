@@ -10,10 +10,6 @@ void ASTTernaryExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTTernaryExpr::codegen(){
-  return nullptr;
-}
-
 std::ostream& ASTTernaryExpr::print(std::ostream &out) const {
   out << "(" << *getCond() << " ? " << *getThen() << " : " << *getElse() << ")";
   return out;

@@ -8,10 +8,6 @@ void ASTArrayLengthExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTArrayLengthExpr::codegen(){
-  return nullptr;
-}
-
 std::ostream& ASTArrayLengthExpr::print(std::ostream &out) const {
   out << "(#" << *getArray() << ")";
   return out;

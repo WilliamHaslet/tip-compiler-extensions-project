@@ -360,7 +360,7 @@ void TypeConstraintVisitor::endVisit(ASTDecrementStmt * element) {
   constraintHandler->handle(astToVar(element->getArg()), std::make_shared<TipInt>());
 }
 
-/*! \brief Type constraints for range for loop.
+/*! \brief Type constraints for iterator for loop.
  *
  * Type rules for "for (E1 : E2) S":
  *   [[E1]] = type of the elements in E2
@@ -368,19 +368,11 @@ void TypeConstraintVisitor::endVisit(ASTDecrementStmt * element) {
  *
  */
 void TypeConstraintVisitor::endVisit(ASTForIterStmt * element) {
-  /*std::vector<ASTExpr*> entries = dynamic_cast<ASTArrayExpr*>(element->getRight())->getEntries();
+  auto iteratorType = std::make_shared<TipArray>(astToVar(element->getRight()))->getType();
+  constraintHandler->handle(astToVar(element->getLeft()), iteratorType);
 
-  if (entries.size()==0)
-  {
-    constraintHandler->handle(astToVar(element->getLeft()), std::make_shared<TipAlpha>());
-    constraintHandler->handle(astToVar(element->getRight()), std::make_shared<TipArray>(std::make_shared<TipAlpha>()));
-  }
-  else
-  {
-    auto firstType = astToVar(entries[0]);
-    constraintHandler->handle(astToVar(element->getLeft()), firstType);
-    constraintHandler->handle(astToVar(element->getRight()), std::make_shared<TipArray>());
-  }*/
+  auto arrayType = std::make_shared<TipArray>(std::make_shared<TipAlpha>(element));
+  constraintHandler->handle(astToVar(element->getRight()), arrayType);
 }
 
 /*! \brief Type constraints for range for loop.
@@ -427,9 +419,9 @@ void TypeConstraintVisitor::endVisit(ASTTernaryExpr * element) {
 void TypeConstraintVisitor::endVisit(ASTOfArrayExpr * element) {
   auto intType = std::make_shared<TipInt>();
 
-  constraintHandler->handle(astToVar(element), std::make_shared<TipArray>(std::make_shared<TipInt>()));
+  constraintHandler->handle(astToVar(element), std::make_shared<TipArray>(astToVar(element->getRight())));
   constraintHandler->handle(astToVar(element->getLeft()), intType);
-  constraintHandler->handle(astToVar(element->getRight()), intType);
+  constraintHandler->handle(astToVar(element->getRight()), std::make_shared<TipAlpha>(element));
 }
 /*! \brief Type constraints for array expression.
  *

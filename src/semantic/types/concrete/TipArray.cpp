@@ -14,30 +14,11 @@ std::ostream& TipArray::print(std::ostream &out) const {
 }
 
 bool TipArray::operator==(const TipType &other) const {
-    /*
-    auto tipArray = dynamic_cast<const TipArray *>(&other);
-    if(!tipArray) {
-        return false;
-    }
-
-    if(arity() != tipArray->arity()) {
-        return false;
-    }
-
-    for(int i = 0; i < arity(); i++) {
-        if(*(arguments.at(i)) != *(tipArray->arguments.at(i))) {
-            return false;
-        }
-    }
-
-    return true;
-    */
-
     auto otherTipArray = dynamic_cast<const TipArray *>(&other);
     if(!otherTipArray) {
         return false;
     }
-
+    
     return *arguments.front() == *otherTipArray->getType();
 }
 
@@ -48,7 +29,6 @@ bool TipArray::operator!=(const TipType &other) const {
 std::shared_ptr<TipType> TipArray::getType() const{
     return arguments.front();
 }
-
 
 void TipArray::accept(TipTypeVisitor * visitor) {
   if (visitor->visit(this)) {

@@ -78,13 +78,12 @@ public:
     // E1++
     // E1--
     // E1 ? E2 : E3
+    // for (E1 : E2)
     // for (E1 : E2 .. E3 by E4)
-    // %
     // >=
     // <
     // <=
-
-    // for (E1 : E2)                // not done
+    // %
     // [E1 of E2]
 
     // [E1, ..., En]

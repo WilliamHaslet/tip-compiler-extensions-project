@@ -8,13 +8,7 @@ void ASTIncrementStmt::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTIncrementStmt::codegen()
-{
-  return nullptr;
-}
-
 std::ostream& ASTIncrementStmt::print(std::ostream &out) const {
   out << *getArg() << "++;";
   return out;
 }
-

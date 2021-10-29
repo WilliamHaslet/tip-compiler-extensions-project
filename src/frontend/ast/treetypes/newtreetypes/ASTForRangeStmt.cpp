@@ -17,11 +17,6 @@ void ASTForRangeStmt::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTForRangeStmt::codegen()
-{
-  return nullptr;
-}
-
 std::ostream& ASTForRangeStmt::print(std::ostream &out) const
 {
   out << "for (" << *getOne() << " : " << *getTwo() << " .. " << *getThree();

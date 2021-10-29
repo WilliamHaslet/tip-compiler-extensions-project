@@ -9,10 +9,6 @@ void ASTElementRefrenceOperatorExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTElementRefrenceOperatorExpr::codegen(){
-  return nullptr;
-}
-
 std::ostream& ASTElementRefrenceOperatorExpr::print(std::ostream &out) const {
   out << "(" << *getArray() << "[" << *getIndex() << "]" << ")";
   return out;
