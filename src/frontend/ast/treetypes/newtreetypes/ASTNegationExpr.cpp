@@ -8,11 +8,6 @@ void ASTNegationExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTNegationExpr::codegen()
-{
-  return nullptr;
-}
-
 std::ostream& ASTNegationExpr::print(std::ostream &out) const {
   out << "-(" << *getExpr() << ")";
   return out;

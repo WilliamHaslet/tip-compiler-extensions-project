@@ -122,3 +122,28 @@ TEST_CASE("Check Assignable: address of expr", "[Symbol]") {
                            SemanticError,
                            ContainsWhat("(y*y) not an l-value"));
 }
+
+TEST_CASE("Check Assignable: element reference lhs", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(varlhs() { var x; x = [1,2,3,4,5]; x[0] = 8; return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
+}
+
+TEST_CASE("Check Assignable: array lhs", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(arraylhs(p) { var x, y; [1,2] = x; return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_THROWS_MATCHES(CheckAssignable::check(ast.get()),
+                           SemanticError,
+                           ContainsWhat("[1, 2] not an l-value"));
+}
+
+TEST_CASE("Check Assignable: array length lhs", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(lenlhs(p) { var x, y; x = [1,2,3,4,5]; #x = 4; return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_THROWS_MATCHES(CheckAssignable::check(ast.get()),
+                           SemanticError,
+                           ContainsWhat("(#x) not an l-value"));
+}

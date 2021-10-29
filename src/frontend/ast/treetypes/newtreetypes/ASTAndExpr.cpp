@@ -9,11 +9,6 @@ void ASTAndExpr::accept(ASTVisitor * visitor) {
   visitor->endVisit(this);
 }
 
-llvm::Value* ASTAndExpr::codegen()
-{
-  return nullptr;
-}
-
 std::ostream& ASTAndExpr::print(std::ostream &out) const {
   out << "(" << *getLeft() << " and " << *getRight() << ")";
   return out;

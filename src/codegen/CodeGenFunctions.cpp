@@ -1004,3 +1004,72 @@ llvm::Value* ASTReturnStmt::codegen() {
   Value *argVal = getArg()->codegen();
   return Builder.CreateRet(argVal);
 }
+
+llvm::Value* ASTAndExpr::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTArrayExpr::codegen(){
+  return nullptr;
+}
+
+llvm::Value* ASTArrayLengthExpr::codegen(){
+  return nullptr;
+}
+
+llvm::Value* ASTDecrementStmt::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTElementRefrenceOperatorExpr::codegen(){
+  return nullptr;
+}
+
+llvm::Value* ASTFalseExpr::codegen(){
+  return nullptr;
+}
+
+llvm::Value* ASTForIterStmt::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTForRangeStmt::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTIncrementStmt::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTNegationExpr::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTNotExpr::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTOfArrayExpr::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTOrExpr::codegen()
+{
+  return nullptr;
+}
+
+llvm::Value* ASTTernaryExpr::codegen(){
+  return nullptr;
+}
+
+llvm::Value* ASTTrueExpr::codegen(){
+  return nullptr;
+}

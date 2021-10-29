@@ -32,6 +32,8 @@ void CheckAssignable::endVisit(ASTAssignStmt* element) {
   // Assigning through a pointer is also permitted
   if (dynamic_cast<ASTDeRefExpr*>(element->getLHS())) return;
 
+  if (dynamic_cast<ASTElementRefrenceOperatorExpr*>(element->getLHS())) return;
+
   std::ostringstream oss;
   oss << "Assignment error on line " << element->getLine() << ": ";
   if(dynamic_cast<ASTAccessExpr*>(element->getLHS())){

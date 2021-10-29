@@ -5,6 +5,8 @@
 #include "TipRef.h"
 #include "TipAlpha.h"
 #include "TipMu.h"
+#include "TipBool.h"
+#include "TipArray.h"
 #include "TypeConstraintCollectVisitor.h"
 #include "TypeConstraintUnifyVisitor.h"
 #include "TypeConstraintVisitor.h"
@@ -172,6 +174,77 @@ poly(p){
         REQUIRE_THROWS_AS(unifier.solve(), UnificationError);
     }
 
+SECTION("Test type-safe bools") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y;
+              x = true;
+              y = false;
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintCollectVisitor visitor(symbols.get());
+        ast->accept(&visitor);
+
+        Unifier unifier(visitor.getCollectedConstraints());
+        REQUIRE_NOTHROW(unifier.solve());
+
+        // Expected types
+        std::vector<std::shared_ptr<TipType>> emptyParams;
+        auto intType = std::make_shared<TipInt>();
+        auto boolType = std::make_shared<TipBool>();
+        auto funRetInt = std::make_shared<TipFunction>(emptyParams,intType);
+
+        auto fDecl = symbols->getFunction("short"); 
+        auto fType = std::make_shared<TipVar>(fDecl); 
+
+        REQUIRE(*unifier.inferred(fType) == *funRetInt);
+
+        auto xType = std::make_shared<TipVar>(symbols->getLocal("x",fDecl));
+        REQUIRE(*unifier.inferred(xType) == *boolType);
+
+        auto yType = std::make_shared<TipVar>(symbols->getLocal("y",fDecl));
+        REQUIRE(*unifier.inferred(yType) == *boolType);
+    }
+
+    SECTION("Test type-safe arrays") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = [1, 2, 3];
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintCollectVisitor visitor(symbols.get());
+        ast->accept(&visitor);
+
+        Unifier unifier(visitor.getCollectedConstraints());
+        REQUIRE_NOTHROW(unifier.solve());
+
+        // Expected types
+        std::vector<std::shared_ptr<TipType>> emptyParams;
+        auto intType = std::make_shared<TipInt>();
+        auto arrayType = std::make_shared<TipArray>(intType);
+        auto funRetInt = std::make_shared<TipFunction>(emptyParams,intType);
+
+        auto fDecl = symbols->getFunction("short"); 
+        auto fType = std::make_shared<TipVar>(fDecl); 
+
+        REQUIRE(*unifier.inferred(fType) == *funRetInt);
+
+        auto xType = std::make_shared<TipVar>(symbols->getLocal("x",fDecl));
+        REQUIRE(*unifier.inferred(xType) == *arrayType);
+    }
 }
 
 TEST_CASE("Unifier: Unify constraints on the fly", "[Unifier, On-the-fly]") {
@@ -207,6 +280,30 @@ main() {
     output r1;
     return 0;
 }    
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-safe function application") {
+        std::stringstream program;
+        program << R"(
+            foo(x) {
+                return null;
+            }
+
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = foo(x);
+              return w;
+            }
          )";
 
         auto ast = ASTHelper::build_ast(program);
@@ -335,6 +432,590 @@ poly(p){
         REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);    
     }
 
+    SECTION("Test type-safe bools") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y;
+              x = true;
+              y = false;
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe bools") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y;
+              x = true;
+              y = 2;
+              x = 1;
+              y = false;
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe and or not") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y, z;
+              y = true;
+              z = false;
+              
+              x = true and false;
+              x = true and true;
+              x = false and false;
+
+              x = true or false;
+              x = true or true;
+              x = false or false;
+
+              x = not true;
+              x = not false;
+
+              x = y and z;
+              x = y and y;
+              x = z and z;
+
+              x = y or z;
+              x = y or y;
+              x = z or z;
+
+              x = not y;
+              x = not z;
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-safe inc dec") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = 1;
+              x++;
+              x--;
+              return x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe inc dec") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = true;
+              x++;
+              x--;
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe ternary") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y, z;
+              y = 2;
+              z = 4;
+              x = true ? 0 : 1;
+              x = x == 0 ? y : z;
+              return x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe ternary") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y, z;
+              y = 2;
+              z = false;
+              x = 0 ? false : 1;
+              x = x == 0 ? y : z;
+              return x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe for iter") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y;
+              y = [1, 2, 3];
+              for (x : y)
+              {
+                  
+              }
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe for iter") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y;
+              y = 2;
+              for (x : y)
+              {
+                  
+              }
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe for range") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              for (x : 2 .. 10)
+              {
+                  
+              }
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe for range") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              for (x : 2 .. false)
+              {
+                  
+              }
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe for range by") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              for (x : 2 .. 10 by 2)
+              {
+                  
+              }
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe for range by") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = false;
+              for (x : 2 .. 10 by 2)
+              {
+                  
+              }
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe array") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = [x, y, z];
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe array") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = true;
+              y = 2;
+              z = false;
+              w = [x, y, z];
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe comparisons") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y, z;
+              y = 2;
+              z = 3;
+
+              x = 1 > 0;
+              x = 1 >= 0;
+              x = 1 < 0;
+              x = 1 <= 0;
+              x = 1 == 0;
+              x = 1 != 0;
+
+              x = y > z;
+              x = y >= z;
+              x = y < z;
+              x = y <= z;
+              x = y == z;
+              x = y != z;
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe comparisons") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y, z;
+              y = 2;
+              z = true;
+
+              x = false > 0;
+              x = false >= 0;
+              x = false < 0;
+              x = false <= 0;
+              x = false == 0;
+              x = false != 0;
+
+              x = y > z;
+              x = y >= z;
+              x = y < z;
+              x = y <= z;
+              x = y == z;
+              x = y != z;
+              return 0;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test negation operator") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y;
+              x = 1;
+              y = -x;
+              return y;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test unsafe negation operator") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x, y;
+              x = true;
+              y = -x;
+              return y;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe element reference") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = [1, 2, 3];
+              return w[0];
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe element reference") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = [1, 2, 3];
+              return w[true];
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe array length") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = [x, y, z];
+              return #w;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-safe array length 2") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var w, x, y, z;
+              x = 1;
+              y = 2;
+              z = 3;
+              w = [x, y, z];
+              x = 1 + #w;
+              return x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe array length") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = true;
+              return #x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe mod") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = 5 % 2;
+              return x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe mod") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = true % 2;
+              return x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
+
+    SECTION("Test type-safe of array") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = [10 of true];
+              return x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_NOTHROW(ast->accept(&visitor));
+    }
+
+    SECTION("Test type-unsafe of array") {
+        std::stringstream program;
+        program << R"(
+            short() {
+              var x;
+              x = [true of 2];
+              return x;
+            }
+         )";
+
+        auto ast = ASTHelper::build_ast(program);
+        auto symbols = SymbolTable::build(ast.get());
+
+        TypeConstraintUnifyVisitor visitor(symbols.get());
+        REQUIRE_THROWS_AS(ast->accept(&visitor), UnificationError);
+    }
 }
 
 
@@ -427,4 +1108,16 @@ TEST_CASE("Unifier: Test closing mu ", "[Unifier]") {
     ss << *closed;
 
     REQUIRE_NOTHROW(ss.str() == "\u03bc\u03B1<f>.(\u03B1<f>,int) -> int");
+}
+
+TEST_CASE("Unifier: Test unifying proper types with a type ", "[Unifier]") {
+    ASTVariableExpr variableExpr("foo");
+    auto tipVar = std::make_shared<TipVar>(&variableExpr);
+    auto tipInt = std::make_shared<TipInt>();
+
+    TypeConstraint constraint(tipVar, tipInt);
+    std::vector<TypeConstraint> constraints {constraint};
+
+    Unifier unifier(constraints);
+    REQUIRE_NOTHROW(unifier.unify(tipVar, tipInt));
 }
