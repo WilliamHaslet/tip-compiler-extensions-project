@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "AST.h"
 #include "SemanticAnalysis.h"
 #include "InternalError.h"
@@ -1007,11 +1009,38 @@ llvm::Value* ASTReturnStmt::codegen() {
 
 llvm::Value* ASTAndExpr::codegen()
 {
-  return nullptr;
+  Value *L = getLeft()->codegen();
+  Value *R = getRight()->codegen();
+
+  if (L == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the left arguement of and");
+  }
+
+  if (R == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the right arguement of and");
+  }
+
+  Value *addBool = Builder.CreateAdd(L,R);
+  Value* comp = Builder.CreateICmpSGT(addBool, oneV, "andtmp");
+  return Builder.CreateIntCast(comp, Type::getInt64Ty(TheContext), false);
 }
 
-llvm::Value* ASTArrayExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTArrayExpr::codegen()
+{
+  std::vector<ASTExpr*> entries = getEntries();
+  int entryCount  = getEntries().size();
+
+  ArrayType *arrayType = ArrayType::get(Type::getInt64Ty(TheContext),entryCount);
+  Value *arr_alloc = Builder.CreateAlloca(arrayType);
+
+  for (int i = 0; i < entryCount; i++)
+  {
+    Value* entry = entries[i]->codegen();
+  }
+
+  return Builder.CreateIntCast(arr_alloc, Type::getInt64Ty(TheContext), true); 
 }
 
 llvm::Value* ASTArrayLengthExpr::codegen(){
@@ -1020,7 +1049,17 @@ llvm::Value* ASTArrayLengthExpr::codegen(){
 
 llvm::Value* ASTDecrementStmt::codegen()
 {
-  return nullptr;
+  lValueGen = true;
+  Value *lValue = getArg()->codegen();
+  lValueGen = false;
+
+  if (lValue == nullptr) {
+    throw InternalError("failed to generate bitcode for the l-value of decrement");
+  }
+  
+  Value *decTarget = Builder.CreateLoad(lValue, "decTarget");
+  Value *dectmp = Builder.CreateSub(decTarget, oneV, "dectmp");
+  return Builder.CreateStore(dectmp, lValue);
 }
 
 llvm::Value* ASTElementRefrenceOperatorExpr::codegen(){
@@ -1028,7 +1067,7 @@ llvm::Value* ASTElementRefrenceOperatorExpr::codegen(){
 }
 
 llvm::Value* ASTFalseExpr::codegen(){
-  return nullptr;
+  return zeroV;
 }
 
 llvm::Value* ASTForIterStmt::codegen()
@@ -1043,7 +1082,17 @@ llvm::Value* ASTForRangeStmt::codegen()
 
 llvm::Value* ASTIncrementStmt::codegen()
 {
-  return nullptr;
+  lValueGen = true;
+  Value *lValue = getArg()->codegen();
+  lValueGen = false;
+
+  if (lValue == nullptr) {
+    throw InternalError("failed to generate bitcode for the l-value of increment");
+  }
+  
+  Value *incTarget = Builder.CreateLoad(lValue, "incTarget");
+  Value *inctmp = Builder.CreateAdd(incTarget, oneV, "inctmp");
+  return Builder.CreateStore(inctmp, lValue);
 }
 
 llvm::Value* ASTNegationExpr::codegen()
@@ -1053,7 +1102,16 @@ llvm::Value* ASTNegationExpr::codegen()
 
 llvm::Value* ASTNotExpr::codegen()
 {
-  return nullptr;
+  Value *L = getExpr()->codegen();
+
+  if (L == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the arguement of not");
+  }
+
+  Value *casted = Builder.CreateIntCast(L, Type::getInt1Ty(TheContext), false);
+  Value *n = Builder.CreateNot(casted);
+  return Builder.CreateIntCast(n, Type::getInt64Ty(TheContext), false);
 }
 
 llvm::Value* ASTOfArrayExpr::codegen()
@@ -1063,13 +1121,52 @@ llvm::Value* ASTOfArrayExpr::codegen()
 
 llvm::Value* ASTOrExpr::codegen()
 {
-  return nullptr;
+  Value *L = getLeft()->codegen();
+  Value *R = getRight()->codegen();
+
+  if (L == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the left arguement of or");
+  }
+
+  if (R == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the right arguement of or");
+  }
+
+  Value *addBool = Builder.CreateAdd(L,R);
+  Value *comp = Builder.CreateICmpSGT(addBool, zeroV, "ortmp");
+  return Builder.CreateIntCast(comp, Type::getInt64Ty(TheContext), false);
 }
 
-llvm::Value* ASTTernaryExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTTernaryExpr::codegen()
+{
+  Value *condV = getCond()->codegen();
+
+  if (condV == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the ternary condition");
+  }
+
+  Value *thenV = getThen()->codegen();
+
+  if (thenV == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the ternary then");
+  }
+
+  Value *elseV = getElse()->codegen();
+  
+  if (elseV == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the ternary else");
+  }
+
+  Value *cond = Builder.CreateIntCast(condV, Type::getInt1Ty(TheContext), false);
+  return Builder.CreateSelect(cond, thenV, elseV);
 }
 
-llvm::Value* ASTTrueExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTTrueExpr::codegen()
+{
+  return oneV;
 }

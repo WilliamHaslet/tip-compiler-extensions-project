@@ -72,25 +72,25 @@ public:
 
     // true
     // false
-    // not
-    // and
-    // or
     // E1++
     // E1--
-    // E1 ? E2 : E3
-    // for (E1 : E2)
-    // for (E1 : E2 .. E3 by E4)
+    // and
+    // or
     // >=
     // <
     // <=
     // %
-    // [E1 of E2]
+    // not
+    // -(E1)
+    // E1 ? E2 : E3
 
+    // for (E1 : E2 .. E3 by E4)
+    // for (E1 : E2)
+    // [E1 of E2]
     // [E1, ..., En]
     // E1[E2]
     // #[]
-    // -(E1)
-
+    
 protected:
     std::unique_ptr<ConstraintHandler> constraintHandler;
 
@@ -99,4 +99,3 @@ private:
     SymbolTable *symbolTable;
     std::shared_ptr<TipType> astToVar(ASTNode * n);
 };
-
