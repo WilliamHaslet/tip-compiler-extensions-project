@@ -1032,19 +1032,33 @@ llvm::Value* ASTArrayExpr::codegen()
   std::vector<ASTExpr*> entries = getEntries();
   int entryCount  = getEntries().size();
 
-  ArrayType *arrayType = ArrayType::get(Type::getInt64Ty(TheContext),entryCount);
-  Value *arr_alloc = Builder.CreateAlloca(arrayType);
+  std::vector<Value *> args;
+  args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), 1));
+  args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), entryCount + 1));
+
+  auto *allocInst = Builder.CreateCall(callocFun, args, "allocPtr");
+  auto *castPtr = Builder.CreatePointerCast(allocInst, Type::getInt64PtrTy(TheContext), "castPtr");
+  
+  Value* entryCountValue = ConstantInt::get(Type::getInt64Ty(TheContext), entryCount);
+  auto *initializingStore = Builder.CreateStore(entryCountValue, castPtr);
 
   for (int i = 0; i < entryCount; i++)
   {
-    Value* entry = entries[i]->codegen();
+    Value* entryValue = entries[i]->codegen();
+    Value* offset = ConstantInt::get(Type::getInt64Ty(TheContext), i + 1);
+    Value* storePtr = Builder.CreateGEP(castPtr, offset);
+    Builder.CreateStore(entryValue, storePtr);
   }
 
-  return Builder.CreateIntCast(arr_alloc, Type::getInt64Ty(TheContext), true); 
+  return Builder.CreatePtrToInt(castPtr, Type::getInt64Ty(TheContext), "allocIntVal");
 }
 
-llvm::Value* ASTArrayLengthExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTArrayLengthExpr::codegen()
+{
+  Value* array = getArray()->codegen();
+  Value* arrayPtr = Builder.CreateIntToPtr(array, Type::getInt64PtrTy(TheContext));
+  Value* loadPtr = Builder.CreateGEP(arrayPtr, zeroV);
+  return Builder.CreateLoad(loadPtr);
 }
 
 llvm::Value* ASTDecrementStmt::codegen()
@@ -1062,8 +1076,14 @@ llvm::Value* ASTDecrementStmt::codegen()
   return Builder.CreateStore(dectmp, lValue);
 }
 
-llvm::Value* ASTElementRefrenceOperatorExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTElementRefrenceOperatorExpr::codegen()
+{
+  Value* array = getArray()->codegen();
+  Value* arrayPtr = Builder.CreateIntToPtr(array, Type::getInt64PtrTy(TheContext));
+  Value* index = getIndex()->codegen();
+  Value* offset = Builder.CreateAdd(index, oneV);
+  Value* loadPtr = Builder.CreateGEP(arrayPtr, offset);
+  return Builder.CreateLoad(loadPtr);  
 }
 
 llvm::Value* ASTFalseExpr::codegen(){
