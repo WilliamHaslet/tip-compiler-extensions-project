@@ -1082,8 +1082,60 @@ llvm::Value* ASTElementRefrenceOperatorExpr::codegen()
   Value* arrayPtr = Builder.CreateIntToPtr(array, Type::getInt64PtrTy(TheContext));
   Value* index = getIndex()->codegen();
   Value* offset = Builder.CreateAdd(index, oneV);
-  Value* loadPtr = Builder.CreateGEP(arrayPtr, offset);
-  return Builder.CreateLoad(loadPtr);  
+
+  Value* lenPtr = Builder.CreateGEP(arrayPtr, zeroV);
+  Value* length = Builder.CreateLoad(lenPtr);
+  Value* oobCond = Builder.CreateICmpSGE(index, length);
+  Value* negCond = Builder.CreateICmpSLT(index, zeroV);
+  Value* cond = Builder.CreateOr(oobCond, negCond);
+
+  Value* theArrayElement = Builder.CreateAlloca(Type::getInt64Ty(TheContext));
+
+  // Banching
+  //Value* output;
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+  
+  labelNum++;
+  BasicBlock *ThenBB = BasicBlock::Create(TheContext, "then" + std::to_string(labelNum), TheFunction);
+  BasicBlock *ElseBB = BasicBlock::Create(TheContext, "else" + std::to_string(labelNum));
+  BasicBlock *MergeBB = BasicBlock::Create(TheContext, "ifmerge" + std::to_string(labelNum));
+
+  Builder.CreateCondBr(cond, ThenBB, ElseBB);
+
+  // Emit then block.
+  {
+    Builder.SetInsertPoint(ThenBB);
+
+    if (errorIntrinsic == nullptr)
+    {
+      std::vector<Type *> oneInt(1, Type::getInt64Ty(TheContext));
+      auto *FT = FunctionType::get(Type::getInt64Ty(TheContext), oneInt, false);
+      errorIntrinsic = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, "_tip_error", CurrentModule.get());
+    }
+
+    std::vector<Value*> ArgsV(1, index);
+    Builder.CreateCall(errorIntrinsic, ArgsV);
+    //theArrayElement = zeroV;
+
+    Builder.CreateBr(MergeBB);
+  }
+
+  // Emit else block.
+  {
+    TheFunction->getBasicBlockList().push_back(ElseBB);
+    Builder.SetInsertPoint(ElseBB);
+
+    Value* loadPtr = Builder.CreateGEP(arrayPtr, offset);
+    Value* arrayElementValue = Builder.CreateLoad(loadPtr);
+    Builder.CreateStore(arrayElementValue, theArrayElement);
+
+    Builder.CreateBr(MergeBB);
+  }
+
+  // Emit merge block.
+  TheFunction->getBasicBlockList().push_back(MergeBB);
+  Builder.SetInsertPoint(MergeBB);
+  return Builder.CreateLoad(theArrayElement);
 }
 
 llvm::Value* ASTFalseExpr::codegen(){
