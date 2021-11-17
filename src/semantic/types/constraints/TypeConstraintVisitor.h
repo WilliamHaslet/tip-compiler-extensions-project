@@ -70,10 +70,16 @@ public:
     void endVisit(ASTTernaryExpr * element) override;
     void endVisit(ASTOfArrayExpr * element) override;
 
-    // true
-    // false
+    // E1 ? E2 : E3
+    // [E1 of E2]
+    // [E1, ..., En]
+    // E1[E2]
+    // #[]
     // E1++
     // E1--
+    
+    // true
+    // false
     // and
     // or
     // >=
@@ -82,15 +88,9 @@ public:
     // %
     // not
     // -(E1)
-    // E1 ? E2 : E3
-
     // for (E1 : E2 .. E3 by E4)
     // for (E1 : E2)
-    // [E1 of E2]
-    // [E1, ..., En]
-    // E1[E2]
-    // #[]
-    
+
 protected:
     std::unique_ptr<ConstraintHandler> constraintHandler;
 

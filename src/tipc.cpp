@@ -81,9 +81,8 @@ int main(int argc, char *argv[]) {
     auto ast = FrontEnd::parse(stream);
 
     try {
-      auto analysisResults = SemanticAnalysis::analyze(ast.get(), distypeinf);
-
-
+      auto analysisResults = SemanticAnalysis::analyze(ast.get(), !distypeinf);
+      
       if (ppretty) {
         FrontEnd::prettyprint(ast.get(), std::cout);
       }

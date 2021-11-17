@@ -1030,10 +1030,10 @@ llvm::Value* ASTAndExpr::codegen()
 llvm::Value* ASTArrayExpr::codegen()
 {
   std::vector<ASTExpr*> entries = getEntries();
-  int entryCount  = getEntries().size();
+  int entryCount = getEntries().size();
 
   std::vector<Value *> args;
-  args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), 1));
+  args.push_back(oneV);
   args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), entryCount + 1));
 
   auto *allocInst = Builder.CreateCall(callocFun, args, "allocPtr");
@@ -1078,6 +1078,14 @@ llvm::Value* ASTDecrementStmt::codegen()
 
 llvm::Value* ASTElementRefrenceOperatorExpr::codegen()
 {
+  bool isLValue = lValueGen;
+
+  if (isLValue)
+  {
+    // This flag is reset here so that sub-expressions are treated as r-values
+    lValueGen = false;
+  }
+
   Value* array = getArray()->codegen();
   Value* arrayPtr = Builder.CreateIntToPtr(array, Type::getInt64PtrTy(TheContext));
   Value* index = getIndex()->codegen();
@@ -1092,7 +1100,6 @@ llvm::Value* ASTElementRefrenceOperatorExpr::codegen()
   Value* theArrayElement = Builder.CreateAlloca(Type::getInt64Ty(TheContext));
 
   // Banching
-  //Value* output;
   llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
   
   labelNum++;
@@ -1135,6 +1142,13 @@ llvm::Value* ASTElementRefrenceOperatorExpr::codegen()
   // Emit merge block.
   TheFunction->getBasicBlockList().push_back(MergeBB);
   Builder.SetInsertPoint(MergeBB);
+
+  if (isLValue)
+  {
+    auto *gep = Builder.CreateGEP(arrayPtr, offset);
+    return gep;
+  }
+  
   return Builder.CreateLoad(theArrayElement);
 }
 
@@ -1188,7 +1202,63 @@ llvm::Value* ASTNotExpr::codegen()
 
 llvm::Value* ASTOfArrayExpr::codegen()
 {
-  return nullptr;
+  Value* count = getLeft()->codegen();
+
+  std::vector<Value *> args;
+  args.push_back(oneV);
+  Value* arraySize = Builder.CreateMul(Builder.CreateAdd(count, oneV), ConstantInt::get(Type::getInt64Ty(TheContext), 8));
+  args.push_back(arraySize);
+
+  auto *allocInst = Builder.CreateCall(callocFun, args, "allocPtr");
+  auto *castPtr = Builder.CreatePointerCast(allocInst, Type::getInt64PtrTy(TheContext), "castPtr");
+
+  Builder.CreateStore(count, castPtr);
+  
+  Value* iterPtr = Builder.CreateAlloca(Type::getInt64Ty(TheContext));
+  Builder.CreateStore(oneV, iterPtr);
+
+  // Loop through and generate values
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+  
+  labelNum++;
+
+  BasicBlock *HeaderBB = BasicBlock::Create(TheContext, "header" + std::to_string(labelNum), TheFunction);
+  BasicBlock *BodyBB = BasicBlock::Create(TheContext, "body" + std::to_string(labelNum));
+  BasicBlock *ExitBB = BasicBlock::Create(TheContext, "exit" + std::to_string(labelNum));
+
+  Builder.CreateBr(HeaderBB);
+
+  // Emit loop header
+  {
+    Builder.SetInsertPoint(HeaderBB);
+
+    Value* iterVal = Builder.CreateLoad(iterPtr);
+    Value* cond = Builder.CreateICmpSLE(iterVal, count);
+    
+    Builder.CreateCondBr(cond, BodyBB, ExitBB);
+  }
+
+  // Emit loop body
+  {
+    TheFunction->getBasicBlockList().push_back(BodyBB);
+    Builder.SetInsertPoint(BodyBB);
+    
+    Value* iterVal = Builder.CreateLoad(iterPtr);
+    Value* storePtr = Builder.CreateGEP(castPtr, iterVal);
+    Value* arrayValue = getRight()->codegen();
+    Builder.CreateStore(arrayValue, storePtr);
+
+    Value* newIterVal = Builder.CreateAdd(iterVal, oneV);
+    Builder.CreateStore(newIterVal, iterPtr);
+
+    Builder.CreateBr(HeaderBB);
+  }
+
+  // Emit loop exit block.
+  TheFunction->getBasicBlockList().push_back(ExitBB);
+  Builder.SetInsertPoint(ExitBB);
+  
+  return Builder.CreatePtrToInt(castPtr, Type::getInt64Ty(TheContext), "allocIntVal");
 }
 
 llvm::Value* ASTOrExpr::codegen()
