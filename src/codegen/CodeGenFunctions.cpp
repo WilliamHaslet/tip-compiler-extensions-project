@@ -460,10 +460,18 @@ llvm::Value* ASTBinaryExpr::codegen() {
     return Builder.CreateSub(L, R, "subtmp");
   } else if (getOp() == "*") {
     return Builder.CreateMul(L, R, "multmp");
+  } else if (getOp() == "%") {
+    return Builder.CreateSRem(L, R, "modtmp");
   } else if (getOp() == "/") {
     return Builder.CreateSDiv(L, R, "divtmp");
   } else if (getOp() == ">") {
     return Builder.CreateICmpSGT(L, R, "gttmp");
+  } else if (getOp() == "<") {
+    return Builder.CreateICmpSLT(L, R, "lttmp");
+  } else if (getOp() == ">=") {
+    return Builder.CreateICmpSGE(L, R, "gtemp");
+  } else if (getOp() == "<=") {
+    return Builder.CreateICmpSLE(L, R, "ltemp");
   } else if (getOp() == "==") {
     return Builder.CreateICmpEQ(L, R, "eqtmp");
   } else if (getOp() == "!=") {
@@ -1011,20 +1019,7 @@ llvm::Value* ASTAndExpr::codegen()
 {
   Value *L = getLeft()->codegen();
   Value *R = getRight()->codegen();
-
-  if (L == nullptr)
-  {
-    throw InternalError("failed to generate bitcode for the left arguement of and");
-  }
-
-  if (R == nullptr)
-  {
-    throw InternalError("failed to generate bitcode for the right arguement of and");
-  }
-
-  Value *addBool = Builder.CreateAdd(L,R);
-  Value* comp = Builder.CreateICmpSGT(addBool, oneV, "andtmp");
-  return Builder.CreateIntCast(comp, Type::getInt64Ty(TheContext), false);
+  return Builder.CreateMul(L, R, "andtmp");
 }
 
 llvm::Value* ASTArrayExpr::codegen()
@@ -1158,12 +1153,147 @@ llvm::Value* ASTFalseExpr::codegen(){
 
 llvm::Value* ASTForIterStmt::codegen()
 {
-  return nullptr;
+  Value *array = getRight()->codegen();
+  lValueGen = true;
+  Value *iterator = getLeft()->codegen();
+  lValueGen = false;
+
+  //getting the length of the array
+  Value* arrayPtr = Builder.CreateIntToPtr(array, Type::getInt64PtrTy(TheContext));
+  Value* loadPtr = Builder.CreateGEP(arrayPtr, zeroV);
+  Value* length = Builder.CreateLoad(loadPtr);
+
+  //allocate space for index variable with integer type
+  Value *index = Builder.CreateAlloca(Type::getInt64Ty(TheContext));
+  //initialize index value to 1
+  Builder.CreateStore(oneV, index);
+
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+
+  labelNum++; // create unique labels for these BBs
+
+  BasicBlock *HeaderBB = BasicBlock::Create(
+      TheContext, "header" + std::to_string(labelNum), TheFunction);
+  BasicBlock *BodyBB =
+      BasicBlock::Create(TheContext, "body" + std::to_string(labelNum));
+  BasicBlock *ExitBB =
+      BasicBlock::Create(TheContext, "exit" + std::to_string(labelNum));
+
+  
+  // Add an explicit branch from the current BB to the header
+  Builder.CreateBr(HeaderBB);
+
+  // Emit loop header
+  {
+    Builder.SetInsertPoint(HeaderBB);
+
+    Value *curIndex = Builder.CreateLoad(index);
+    Value *CondV = Builder.CreateICmpSLE(curIndex, length, "lenCond");
+
+    // Convert condition to a bool by comparing non-equal to 0.
+    CondV = Builder.CreateICmpNE(CondV, ConstantInt::get(CondV->getType(), 0), "loopcond");
+
+    Builder.CreateCondBr(CondV, BodyBB, ExitBB);
+  }
+
+  // Emit loop body
+  {
+    TheFunction->getBasicBlockList().push_back(BodyBB);
+    Builder.SetInsertPoint(BodyBB);
+
+    //if condition valid, store array element into iterator
+    Value *curIndex = Builder.CreateLoad(index);
+    Value* loadPtr = Builder.CreateGEP(arrayPtr, curIndex);
+    Value* arrayElementValue = Builder.CreateLoad(loadPtr);
+    Builder.CreateStore(arrayElementValue, iterator);
+
+
+    Value *BodyV = getBody()->codegen();
+    if (BodyV == nullptr) {
+      throw InternalError("failed to generate bitcode for the loop body");
+    }
+
+    Value *inctmp = Builder.CreateAdd(curIndex, oneV, "inctmp");
+    Builder.CreateStore(inctmp, index);
+
+    Builder.CreateBr(HeaderBB);
+  }
+
+  // Emit loop exit block.
+  TheFunction->getBasicBlockList().push_back(ExitBB);
+  Builder.SetInsertPoint(ExitBB);
+  return Builder.CreateCall(nop);
 }
 
 llvm::Value* ASTForRangeStmt::codegen()
 {
-  return nullptr;
+  lValueGen = true;
+  Value *iterator = getOne()->codegen();
+  lValueGen = false;
+  Value *start = getTwo()->codegen();
+  Value *end = getThree()->codegen();
+
+  //Checking if a step parameter exists; if not, then the step defaults to 1
+  Value *step = oneV;
+  if (getFour() != nullptr){
+    step = getFour()->codegen();
+  }
+
+
+  if (iterator == nullptr || start == nullptr || end == nullptr) {
+    throw InternalError("failed to generate bitcode for the for range loop");
+  }
+
+  Builder.CreateStore(start, iterator);
+
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+
+  labelNum++; // create unique labels for these BBs
+
+  BasicBlock *HeaderBB = BasicBlock::Create(
+      TheContext, "header" + std::to_string(labelNum), TheFunction);
+  BasicBlock *BodyBB =
+      BasicBlock::Create(TheContext, "body" + std::to_string(labelNum));
+  BasicBlock *ExitBB =
+      BasicBlock::Create(TheContext, "exit" + std::to_string(labelNum));
+
+  // Add an explicit branch from the current BB to the header
+  Builder.CreateBr(HeaderBB);
+
+  // Emit loop header
+  {
+    Builder.SetInsertPoint(HeaderBB);
+
+    Value *curVal = Builder.CreateLoad(iterator);
+    Value *CondV = Builder.CreateICmpSLE(curVal, end, "forCond");
+
+    // Convert condition to a bool by comparing non-equal to 0.
+    CondV = Builder.CreateICmpNE(CondV, ConstantInt::get(CondV->getType(), 0), "loopcond");
+
+    Builder.CreateCondBr(CondV, BodyBB, ExitBB);
+  }
+
+  // Emit loop body
+  {
+    TheFunction->getBasicBlockList().push_back(BodyBB);
+    Builder.SetInsertPoint(BodyBB);
+    Value *cur = Builder.CreateLoad(iterator);
+
+    Value *BodyV = getBody()->codegen();
+    if (BodyV == nullptr) {
+      throw InternalError("failed to generate bitcode for the loop body");
+    }
+
+    Value *inctmp = Builder.CreateAdd(cur, step, "inctmp");
+    Builder.CreateStore(inctmp, iterator);
+
+    Builder.CreateBr(HeaderBB);
+  }
+
+  // Emit loop exit block.
+  TheFunction->getBasicBlockList().push_back(ExitBB);
+  Builder.SetInsertPoint(ExitBB);
+  return Builder.CreateCall(nop);
 }
 
 llvm::Value* ASTIncrementStmt::codegen()
@@ -1183,7 +1313,10 @@ llvm::Value* ASTIncrementStmt::codegen()
 
 llvm::Value* ASTNegationExpr::codegen()
 {
-  return nullptr;
+  //Done
+  Value *E = getExpr()->codegen();
+  Value *neg = ConstantInt::get(Type::getInt64Ty(TheContext), -1);
+  return Builder.CreateMul(E, neg, "negtemp");
 }
 
 llvm::Value* ASTNotExpr::codegen()
