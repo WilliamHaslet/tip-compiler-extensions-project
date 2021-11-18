@@ -1029,7 +1029,7 @@ llvm::Value* ASTArrayExpr::codegen()
 
   std::vector<Value *> args;
   args.push_back(oneV);
-  args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), entryCount + 1));
+  args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), (entryCount + 1) * 8));
 
   auto *allocInst = Builder.CreateCall(callocFun, args, "allocPtr");
   auto *castPtr = Builder.CreatePointerCast(allocInst, Type::getInt64PtrTy(TheContext), "castPtr");
@@ -1117,7 +1117,6 @@ llvm::Value* ASTElementRefrenceOperatorExpr::codegen()
 
     std::vector<Value*> ArgsV(1, index);
     Builder.CreateCall(errorIntrinsic, ArgsV);
-    //theArrayElement = zeroV;
 
     Builder.CreateBr(MergeBB);
   }
