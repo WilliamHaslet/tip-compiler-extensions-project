@@ -1275,7 +1275,7 @@ llvm::Value* ASTForRangeStmt::codegen()
     Builder.SetInsertPoint(HeaderBB);
 
     Value *curVal = Builder.CreateLoad(iterator);
-    Value *CondV = Builder.CreateICmpSLE(curVal, end, "forCond");
+    Value *CondV = Builder.CreateICmpSLT(curVal, end, "forCond");
 
     // Convert condition to a bool by comparing non-equal to 0.
     CondV = Builder.CreateICmpNE(CondV, ConstantInt::get(CondV->getType(), 0), "loopcond");
