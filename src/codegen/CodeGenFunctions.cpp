@@ -1017,7 +1017,18 @@ llvm::Value* ASTAndExpr::codegen()
 {
   Value *L = getLeft()->codegen();
   Value *R = getRight()->codegen();
-  return Builder.CreateMul(L, R, "andtmp");
+  if (L == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the left arguement of or");
+  }
+
+  if (R == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the right arguement of or");
+  }
+  Value *castLeft = Builder.CreateIntCast(L, Type::getInt64Ty(TheContext), false);
+  Value *castRight = Builder.CreateIntCast(R, Type::getInt64Ty(TheContext), false);
+  return Builder.CreateMul(castLeft, castRight, "andtmp");
 }
 
 llvm::Value* ASTArrayExpr::codegen()
@@ -1343,7 +1354,9 @@ llvm::Value* ASTOrExpr::codegen()
     throw InternalError("failed to generate bitcode for the right arguement of or");
   }
 
-  Value *addBool = Builder.CreateAdd(L,R);
+  Value *castLeft = Builder.CreateIntCast(L, Type::getInt64Ty(TheContext), false);
+  Value *castRight = Builder.CreateIntCast(R, Type::getInt64Ty(TheContext), false);
+  Value *addBool = Builder.CreateAdd(castLeft,castRight);
   Value *comp = Builder.CreateICmpSGT(addBool, zeroV, "ortmp");
   return Builder.CreateIntCast(comp, Type::getInt64Ty(TheContext), false);
 }
