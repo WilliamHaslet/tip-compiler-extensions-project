@@ -58,6 +58,48 @@ TEST_CASE("Check Assignable: address of field", "[Symbol]") {
     REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
 }
 
+TEST_CASE("Check Assignable: address of element reference", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(recordlhs() { var x, y; y = [1,2,3,4,5]; x = &(y[3]); return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
+}
+
+TEST_CASE("Check Assignable: element reference lhs", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(varlhs() { var x; x = [1,2,3,4,5]; x[0] = 8; return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
+}
+
+TEST_CASE("Check Assignable: increment statment", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(varlhs() { var x; x = 0; x++; return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
+}
+
+TEST_CASE("Check Assignable: decrement statment", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(varlhs() { var x; x = 0; x--; return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
+}
+
+TEST_CASE("Check Assignable: for range loop", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(varlhs() { var x; x = 0; for (x : 12 .. 25){} return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
+}
+
+TEST_CASE("Check Assignable: for iter loop", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(varlhs() { var x; x = 0; a = [1,2,3,4]; for (x:a){} return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
+}
+
 /************** the following are expected to fail the check ************/
 
 TEST_CASE("Check Assignable: constant lhs", "[Symbol]") {
@@ -123,13 +165,6 @@ TEST_CASE("Check Assignable: address of expr", "[Symbol]") {
                            ContainsWhat("(y*y) not an l-value"));
 }
 
-TEST_CASE("Check Assignable: element reference lhs", "[Symbol]") {
-    std::stringstream stream;
-    stream << R"(varlhs() { var x; x = [1,2,3,4,5]; x[0] = 8; return 0; })";
-    auto ast = ASTHelper::build_ast(stream);
-    REQUIRE_NOTHROW(CheckAssignable::check(ast.get()));
-}
-
 TEST_CASE("Check Assignable: array lhs", "[Symbol]") {
     std::stringstream stream;
     stream << R"(arraylhs(p) { var x, y; [1,2] = x; return 0; })";
@@ -147,3 +182,41 @@ TEST_CASE("Check Assignable: array length lhs", "[Symbol]") {
                            SemanticError,
                            ContainsWhat("(#x) not an l-value"));
 }
+
+TEST_CASE("Check Assignable: integer as iterator in for-iter loop", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(varlhs() { var x; x = 0; a = [1,2,3,4]; for (1:a){} return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_THROWS_MATCHES(CheckAssignable::check(ast.get()),
+                           SemanticError,
+                           ContainsWhat("1 not an l-value"));
+}
+
+TEST_CASE("Check Assignable: integer as iterator in for-range loop", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(varlhs() { var x; x = 0; for (5 : 12 .. 25){} return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_THROWS_MATCHES(CheckAssignable::check(ast.get()),
+                           SemanticError,
+                           ContainsWhat("5 not an l-value"));
+}
+
+TEST_CASE("Check Assignable: integer increment", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(binlhs() { var x; 3++; return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_THROWS_MATCHES(CheckAssignable::check(ast.get()),
+                           SemanticError,
+                           ContainsWhat("3 not an l-value"));
+}
+
+TEST_CASE("Check Assignable: integer decrement", "[Symbol]") {
+    std::stringstream stream;
+    stream << R"(binlhs() { var x; 3--; return 0; })";
+    auto ast = ASTHelper::build_ast(stream);
+    REQUIRE_THROWS_MATCHES(CheckAssignable::check(ast.get()),
+                           SemanticError,
+                           ContainsWhat("3 not an l-value"));
+}
+
+

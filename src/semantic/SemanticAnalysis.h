@@ -36,7 +36,7 @@ public:
    * \param ast The program AST
    * \return The unique pointer to the semantic analysis structure.
    */
-  static std::unique_ptr<SemanticAnalysis> analyze(ASTProgram* ast); 
+  static std::unique_ptr<SemanticAnalysis> analyze(ASTProgram* ast, bool); 
 
   /*! \fn getSymbolTable
    *  \brief Returns the symbol table computed for the program.

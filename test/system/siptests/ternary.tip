@@ -1,0 +1,6 @@
+main()
+{
+    var x;
+    x = false ? 2 : 3;
+    return x;
+}

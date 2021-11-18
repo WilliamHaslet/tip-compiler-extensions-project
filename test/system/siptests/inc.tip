@@ -1,0 +1,9 @@
+main() {
+    var i;
+    i = -1;
+    i++;
+    i++;
+    i++;
+    i++;
+    return i;
+}

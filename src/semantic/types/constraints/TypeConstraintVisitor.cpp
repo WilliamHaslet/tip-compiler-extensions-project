@@ -368,8 +368,7 @@ void TypeConstraintVisitor::endVisit(ASTDecrementStmt * element) {
  *
  */
 void TypeConstraintVisitor::endVisit(ASTForIterStmt * element) {
-  auto iteratorType = std::make_shared<TipArray>(astToVar(element->getRight()))->getType();
-  constraintHandler->handle(astToVar(element->getLeft()), iteratorType);
+  constraintHandler->handle(astToVar(element->getLeft()), std::make_shared<TipAlpha>(element));
 
   auto arrayType = std::make_shared<TipArray>(std::make_shared<TipAlpha>(element));
   constraintHandler->handle(astToVar(element->getRight()), arrayType);

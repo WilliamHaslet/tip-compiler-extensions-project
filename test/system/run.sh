@@ -23,6 +23,34 @@ initialize_test() {
   ((numtests++))
 }
 
+# SIP related test cases
+for i in siptests/*.expected
+do
+  initialize_test
+  expected="$(basename $i .tip)"
+  executable="$(echo $expected | cut -f1 -d-)"
+  input="$(echo $expected | cut -f2 -d- | cut -f1 -d.)"
+
+  ${TIPC} siptests/$executable.tip
+  ${TIPCLANG} siptests/$executable.tip.bc ${RTLIB}/tip_rtlib.bc -o $executable
+
+  ./${executable} $input >siptests/$executable.output 2>siptests/$executable.output
+
+  diff siptests/$executable.output $i > ${SCRATCH_DIR}/$executable.diff
+
+  if [[ -s ${SCRATCH_DIR}/$executable.diff ]]
+  then
+    echo -n "Test differences for : " 
+    echo $i
+    cat ${SCRATCH_DIR}/$executable.diff
+    ((numfailures++))
+  fi 
+
+  rm siptests/$executable.tip.bc
+  rm siptests/$executable.output
+  rm $executable
+done
+
 # Self contained test cases
 for i in selftests/*.tip
 do

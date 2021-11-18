@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "AST.h"
 #include "SemanticAnalysis.h"
 #include "InternalError.h"
@@ -458,10 +460,18 @@ llvm::Value* ASTBinaryExpr::codegen() {
     return Builder.CreateSub(L, R, "subtmp");
   } else if (getOp() == "*") {
     return Builder.CreateMul(L, R, "multmp");
+  } else if (getOp() == "%") {
+    return Builder.CreateSRem(L, R, "modtmp");
   } else if (getOp() == "/") {
     return Builder.CreateSDiv(L, R, "divtmp");
   } else if (getOp() == ">") {
     return Builder.CreateICmpSGT(L, R, "gttmp");
+  } else if (getOp() == "<") {
+    return Builder.CreateICmpSLT(L, R, "lttmp");
+  } else if (getOp() == ">=") {
+    return Builder.CreateICmpSGE(L, R, "gtemp");
+  } else if (getOp() == "<=") {
+    return Builder.CreateICmpSLE(L, R, "ltemp");
   } else if (getOp() == "==") {
     return Builder.CreateICmpEQ(L, R, "eqtmp");
   } else if (getOp() == "!=") {
@@ -1007,69 +1017,443 @@ llvm::Value* ASTReturnStmt::codegen() {
 
 llvm::Value* ASTAndExpr::codegen()
 {
-  return nullptr;
+  Value *L = getLeft()->codegen();
+  Value *R = getRight()->codegen();
+  if (L == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the left arguement of or");
+  }
+
+  if (R == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the right arguement of or");
+  }
+  Value *castLeft = Builder.CreateIntCast(L, Type::getInt64Ty(TheContext), false);
+  Value *castRight = Builder.CreateIntCast(R, Type::getInt64Ty(TheContext), false);
+  return Builder.CreateMul(castLeft, castRight, "andtmp");
 }
 
-llvm::Value* ASTArrayExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTArrayExpr::codegen()
+{
+  std::vector<ASTExpr*> entries = getEntries();
+  int entryCount = getEntries().size();
+
+  std::vector<Value *> args;
+  args.push_back(oneV);
+  args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), (entryCount + 1) * 8));
+
+  auto *allocInst = Builder.CreateCall(callocFun, args, "allocPtr");
+  auto *castPtr = Builder.CreatePointerCast(allocInst, Type::getInt64PtrTy(TheContext), "castPtr");
+  
+  Value* entryCountValue = ConstantInt::get(Type::getInt64Ty(TheContext), entryCount);
+  auto *initializingStore = Builder.CreateStore(entryCountValue, castPtr);
+
+  for (int i = 0; i < entryCount; i++)
+  {
+    Value* entryValue = entries[i]->codegen();
+    Value* offset = ConstantInt::get(Type::getInt64Ty(TheContext), i + 1);
+    Value* storePtr = Builder.CreateGEP(castPtr, offset);
+    Builder.CreateStore(entryValue, storePtr);
+  }
+
+  return Builder.CreatePtrToInt(castPtr, Type::getInt64Ty(TheContext), "allocIntVal");
 }
 
-llvm::Value* ASTArrayLengthExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTArrayLengthExpr::codegen()
+{
+  Value* array = getArray()->codegen();
+  Value* arrayPtr = Builder.CreateIntToPtr(array, Type::getInt64PtrTy(TheContext));
+  Value* loadPtr = Builder.CreateGEP(arrayPtr, zeroV);
+  return Builder.CreateLoad(loadPtr);
 }
 
 llvm::Value* ASTDecrementStmt::codegen()
 {
-  return nullptr;
+  lValueGen = true;
+  Value *lValue = getArg()->codegen();
+  lValueGen = false;
+
+  if (lValue == nullptr) {
+    throw InternalError("failed to generate bitcode for the l-value of decrement");
+  }
+  
+  Value *decTarget = Builder.CreateLoad(lValue, "decTarget");
+  Value *dectmp = Builder.CreateSub(decTarget, oneV, "dectmp");
+  return Builder.CreateStore(dectmp, lValue);
 }
 
-llvm::Value* ASTElementRefrenceOperatorExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTElementRefrenceOperatorExpr::codegen()
+{
+  bool isLValue = lValueGen;
+
+  if (isLValue)
+  {
+    // This flag is reset here so that sub-expressions are treated as r-values
+    lValueGen = false;
+  }
+
+  Value* array = getArray()->codegen();
+  Value* arrayPtr = Builder.CreateIntToPtr(array, Type::getInt64PtrTy(TheContext));
+  Value* index = getIndex()->codegen();
+  Value* offset = Builder.CreateAdd(index, oneV);
+
+  Value* lenPtr = Builder.CreateGEP(arrayPtr, zeroV);
+  Value* length = Builder.CreateLoad(lenPtr);
+  Value* oobCond = Builder.CreateICmpSGE(index, length);
+  Value* negCond = Builder.CreateICmpSLT(index, zeroV);
+  Value* cond = Builder.CreateOr(oobCond, negCond);
+
+  Value* theArrayElement = Builder.CreateAlloca(Type::getInt64Ty(TheContext));
+
+  // Banching
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+  
+  labelNum++;
+  BasicBlock *ThenBB = BasicBlock::Create(TheContext, "then" + std::to_string(labelNum), TheFunction);
+  BasicBlock *ElseBB = BasicBlock::Create(TheContext, "else" + std::to_string(labelNum));
+  BasicBlock *MergeBB = BasicBlock::Create(TheContext, "ifmerge" + std::to_string(labelNum));
+
+  Builder.CreateCondBr(cond, ThenBB, ElseBB);
+
+  // Emit then block.
+  {
+    Builder.SetInsertPoint(ThenBB);
+
+    if (errorIntrinsic == nullptr)
+    {
+      std::vector<Type *> oneInt(1, Type::getInt64Ty(TheContext));
+      auto *FT = FunctionType::get(Type::getInt64Ty(TheContext), oneInt, false);
+      errorIntrinsic = llvm::Function::Create(FT, llvm::Function::ExternalLinkage, "_tip_error", CurrentModule.get());
+    }
+
+    std::vector<Value*> ArgsV(1, index);
+    Builder.CreateCall(errorIntrinsic, ArgsV);
+
+    Builder.CreateBr(MergeBB);
+  }
+
+  // Emit else block.
+  {
+    TheFunction->getBasicBlockList().push_back(ElseBB);
+    Builder.SetInsertPoint(ElseBB);
+
+    Value* loadPtr = Builder.CreateGEP(arrayPtr, offset);
+    Value* arrayElementValue = Builder.CreateLoad(loadPtr);
+    Builder.CreateStore(arrayElementValue, theArrayElement);
+
+    Builder.CreateBr(MergeBB);
+  }
+
+  // Emit merge block.
+  TheFunction->getBasicBlockList().push_back(MergeBB);
+  Builder.SetInsertPoint(MergeBB);
+
+  if (isLValue)
+  {
+    auto *gep = Builder.CreateGEP(arrayPtr, offset);
+    return gep;
+  }
+  
+  return Builder.CreateLoad(theArrayElement);
 }
 
 llvm::Value* ASTFalseExpr::codegen(){
-  return nullptr;
+  return zeroV;
 }
 
 llvm::Value* ASTForIterStmt::codegen()
 {
-  return nullptr;
+  Value *array = getRight()->codegen();
+  lValueGen = true;
+  Value *iterator = getLeft()->codegen();
+  lValueGen = false;
+
+  //getting the length of the array
+  Value* arrayPtr = Builder.CreateIntToPtr(array, Type::getInt64PtrTy(TheContext));
+  Value* loadPtr = Builder.CreateGEP(arrayPtr, zeroV);
+  Value* length = Builder.CreateLoad(loadPtr);
+
+  //allocate space for index variable with integer type
+  Value *index = Builder.CreateAlloca(Type::getInt64Ty(TheContext));
+  //initialize index value to 1
+  Builder.CreateStore(oneV, index);
+
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+
+  labelNum++; // create unique labels for these BBs
+
+  BasicBlock *HeaderBB = BasicBlock::Create(
+      TheContext, "header" + std::to_string(labelNum), TheFunction);
+  BasicBlock *BodyBB =
+      BasicBlock::Create(TheContext, "body" + std::to_string(labelNum));
+  BasicBlock *ExitBB =
+      BasicBlock::Create(TheContext, "exit" + std::to_string(labelNum));
+
+  
+  // Add an explicit branch from the current BB to the header
+  Builder.CreateBr(HeaderBB);
+
+  // Emit loop header
+  {
+    Builder.SetInsertPoint(HeaderBB);
+
+    Value *curIndex = Builder.CreateLoad(index);
+    Value *CondV = Builder.CreateICmpSLE(curIndex, length, "lenCond");
+
+    // Convert condition to a bool by comparing non-equal to 0.
+    CondV = Builder.CreateICmpNE(CondV, ConstantInt::get(CondV->getType(), 0), "loopcond");
+
+    Builder.CreateCondBr(CondV, BodyBB, ExitBB);
+  }
+
+  // Emit loop body
+  {
+    TheFunction->getBasicBlockList().push_back(BodyBB);
+    Builder.SetInsertPoint(BodyBB);
+
+    //if condition valid, store array element into iterator
+    Value *curIndex = Builder.CreateLoad(index);
+    Value* loadPtr = Builder.CreateGEP(arrayPtr, curIndex);
+    Value* arrayElementValue = Builder.CreateLoad(loadPtr);
+    Builder.CreateStore(arrayElementValue, iterator);
+
+
+    Value *BodyV = getBody()->codegen();
+    if (BodyV == nullptr) {
+      throw InternalError("failed to generate bitcode for the loop body");
+    }
+
+    Value *inctmp = Builder.CreateAdd(curIndex, oneV, "inctmp");
+    Builder.CreateStore(inctmp, index);
+
+    Builder.CreateBr(HeaderBB);
+  }
+
+  // Emit loop exit block.
+  TheFunction->getBasicBlockList().push_back(ExitBB);
+  Builder.SetInsertPoint(ExitBB);
+  return Builder.CreateCall(nop);
 }
 
 llvm::Value* ASTForRangeStmt::codegen()
 {
-  return nullptr;
+  lValueGen = true;
+  Value *iterator = getOne()->codegen();
+  lValueGen = false;
+  Value *start = getTwo()->codegen();
+  Value *end = getThree()->codegen();
+
+  //Checking if a step parameter exists; if not, then the step defaults to 1
+  Value *step = oneV;
+  if (getFour() != nullptr){
+    step = getFour()->codegen();
+  }
+
+
+  if (iterator == nullptr || start == nullptr || end == nullptr) {
+    throw InternalError("failed to generate bitcode for the for range loop");
+  }
+
+  Builder.CreateStore(start, iterator);
+
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+
+  labelNum++; // create unique labels for these BBs
+
+  BasicBlock *HeaderBB = BasicBlock::Create(
+      TheContext, "header" + std::to_string(labelNum), TheFunction);
+  BasicBlock *BodyBB =
+      BasicBlock::Create(TheContext, "body" + std::to_string(labelNum));
+  BasicBlock *ExitBB =
+      BasicBlock::Create(TheContext, "exit" + std::to_string(labelNum));
+
+  // Add an explicit branch from the current BB to the header
+  Builder.CreateBr(HeaderBB);
+
+  // Emit loop header
+  {
+    Builder.SetInsertPoint(HeaderBB);
+
+    Value *curVal = Builder.CreateLoad(iterator);
+    Value *CondV = Builder.CreateICmpSLE(curVal, end, "forCond");
+
+    // Convert condition to a bool by comparing non-equal to 0.
+    CondV = Builder.CreateICmpNE(CondV, ConstantInt::get(CondV->getType(), 0), "loopcond");
+
+    Builder.CreateCondBr(CondV, BodyBB, ExitBB);
+  }
+
+  // Emit loop body
+  {
+    TheFunction->getBasicBlockList().push_back(BodyBB);
+    Builder.SetInsertPoint(BodyBB);
+    Value *cur = Builder.CreateLoad(iterator);
+
+    Value *BodyV = getBody()->codegen();
+    if (BodyV == nullptr) {
+      throw InternalError("failed to generate bitcode for the loop body");
+    }
+
+    Value *inctmp = Builder.CreateAdd(cur, step, "inctmp");
+    Builder.CreateStore(inctmp, iterator);
+
+    Builder.CreateBr(HeaderBB);
+  }
+
+  // Emit loop exit block.
+  TheFunction->getBasicBlockList().push_back(ExitBB);
+  Builder.SetInsertPoint(ExitBB);
+  return Builder.CreateCall(nop);
 }
 
 llvm::Value* ASTIncrementStmt::codegen()
 {
-  return nullptr;
+  lValueGen = true;
+  Value *lValue = getArg()->codegen();
+  lValueGen = false;
+
+  if (lValue == nullptr) {
+    throw InternalError("failed to generate bitcode for the l-value of increment");
+  }
+  
+  Value *incTarget = Builder.CreateLoad(lValue, "incTarget");
+  Value *inctmp = Builder.CreateAdd(incTarget, oneV, "inctmp");
+  return Builder.CreateStore(inctmp, lValue);
 }
 
 llvm::Value* ASTNegationExpr::codegen()
 {
-  return nullptr;
+  //Done
+  Value *E = getExpr()->codegen();
+  Value *neg = ConstantInt::get(Type::getInt64Ty(TheContext), -1);
+  return Builder.CreateMul(E, neg, "negtemp");
 }
 
 llvm::Value* ASTNotExpr::codegen()
 {
-  return nullptr;
+  Value *L = getExpr()->codegen();
+
+  if (L == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the arguement of not");
+  }
+
+  Value *casted = Builder.CreateIntCast(L, Type::getInt1Ty(TheContext), false);
+  Value *n = Builder.CreateNot(casted);
+  return Builder.CreateIntCast(n, Type::getInt64Ty(TheContext), false);
 }
 
 llvm::Value* ASTOfArrayExpr::codegen()
 {
-  return nullptr;
+  Value* count = getLeft()->codegen();
+
+  std::vector<Value *> args;
+  args.push_back(oneV);
+  Value* arraySize = Builder.CreateMul(Builder.CreateAdd(count, oneV), ConstantInt::get(Type::getInt64Ty(TheContext), 8));
+  args.push_back(arraySize);
+
+  auto *allocInst = Builder.CreateCall(callocFun, args, "allocPtr");
+  auto *castPtr = Builder.CreatePointerCast(allocInst, Type::getInt64PtrTy(TheContext), "castPtr");
+
+  Builder.CreateStore(count, castPtr);
+  
+  Value* iterPtr = Builder.CreateAlloca(Type::getInt64Ty(TheContext));
+  Builder.CreateStore(oneV, iterPtr);
+
+  // Loop through and generate values
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+  
+  labelNum++;
+
+  BasicBlock *HeaderBB = BasicBlock::Create(TheContext, "header" + std::to_string(labelNum), TheFunction);
+  BasicBlock *BodyBB = BasicBlock::Create(TheContext, "body" + std::to_string(labelNum));
+  BasicBlock *ExitBB = BasicBlock::Create(TheContext, "exit" + std::to_string(labelNum));
+
+  Builder.CreateBr(HeaderBB);
+
+  // Emit loop header
+  {
+    Builder.SetInsertPoint(HeaderBB);
+
+    Value* iterVal = Builder.CreateLoad(iterPtr);
+    Value* cond = Builder.CreateICmpSLE(iterVal, count);
+    
+    Builder.CreateCondBr(cond, BodyBB, ExitBB);
+  }
+
+  // Emit loop body
+  {
+    TheFunction->getBasicBlockList().push_back(BodyBB);
+    Builder.SetInsertPoint(BodyBB);
+    
+    Value* iterVal = Builder.CreateLoad(iterPtr);
+    Value* storePtr = Builder.CreateGEP(castPtr, iterVal);
+    Value* arrayValue = getRight()->codegen();
+    Builder.CreateStore(arrayValue, storePtr);
+
+    Value* newIterVal = Builder.CreateAdd(iterVal, oneV);
+    Builder.CreateStore(newIterVal, iterPtr);
+
+    Builder.CreateBr(HeaderBB);
+  }
+
+  // Emit loop exit block.
+  TheFunction->getBasicBlockList().push_back(ExitBB);
+  Builder.SetInsertPoint(ExitBB);
+  
+  return Builder.CreatePtrToInt(castPtr, Type::getInt64Ty(TheContext), "allocIntVal");
 }
 
 llvm::Value* ASTOrExpr::codegen()
 {
-  return nullptr;
+  Value *L = getLeft()->codegen();
+  Value *R = getRight()->codegen();
+
+  if (L == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the left arguement of or");
+  }
+
+  if (R == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the right arguement of or");
+  }
+
+  Value *castLeft = Builder.CreateIntCast(L, Type::getInt64Ty(TheContext), false);
+  Value *castRight = Builder.CreateIntCast(R, Type::getInt64Ty(TheContext), false);
+  Value *addBool = Builder.CreateAdd(castLeft,castRight);
+  Value *comp = Builder.CreateICmpSGT(addBool, zeroV, "ortmp");
+  return Builder.CreateIntCast(comp, Type::getInt64Ty(TheContext), false);
 }
 
-llvm::Value* ASTTernaryExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTTernaryExpr::codegen()
+{
+  Value *condV = getCond()->codegen();
+
+  if (condV == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the ternary condition");
+  }
+
+  Value *thenV = getThen()->codegen();
+
+  if (thenV == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the ternary then");
+  }
+
+  Value *elseV = getElse()->codegen();
+  
+  if (elseV == nullptr)
+  {
+    throw InternalError("failed to generate bitcode for the ternary else");
+  }
+
+  Value *cond = Builder.CreateIntCast(condV, Type::getInt1Ty(TheContext), false);
+  return Builder.CreateSelect(cond, thenV, elseV);
 }
 
-llvm::Value* ASTTrueExpr::codegen(){
-  return nullptr;
+llvm::Value* ASTTrueExpr::codegen()
+{
+  return oneV;
 }

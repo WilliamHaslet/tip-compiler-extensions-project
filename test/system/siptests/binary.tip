@@ -1,0 +1,21 @@
+main (){
+    var m,n,w,x,y,z;
+    x = 5;
+    y = 2;
+    w = 2;
+    m = 3;
+    n = 1;
+    if (x<=w){
+        z = x%y;
+    }
+    if (x>=w){
+        n = x%y;
+    }
+    if (y<=w){
+        z = x%m;
+    }
+    if (y<n){
+        z = 0;
+    }
+    return n%z;
+}

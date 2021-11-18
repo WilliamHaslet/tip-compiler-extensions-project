@@ -49,9 +49,47 @@ void CheckAssignable::endVisit(ASTAssignStmt* element) {
 void CheckAssignable::endVisit(ASTRefExpr* element) {
   if (isAssignable(element->getVar())) return;
 
+  if (dynamic_cast<ASTElementRefrenceOperatorExpr*>(element->getVar())) return;
+
   std::ostringstream oss;
   oss << "Address of error on line " << element->getLine() << ": ";
   oss << *element->getVar() << " not an l-value\n";
+  throw SemanticError(oss.str());
+}
+
+void CheckAssignable::endVisit(ASTIncrementStmt* element) {
+  if (isAssignable(element->getArg())) return;
+
+  std::ostringstream oss;
+  oss << "Address of error on line " << element->getLine() << ": ";
+  oss << *element->getArg() << " not an l-value\n";
+  throw SemanticError(oss.str());
+}
+
+void CheckAssignable::endVisit(ASTDecrementStmt* element) {
+  if (isAssignable(element->getArg())) return;
+
+  std::ostringstream oss;
+  oss << "Address of error on line " << element->getLine() << ": ";
+  oss << *element->getArg() << " not an l-value\n";
+  throw SemanticError(oss.str());
+}
+
+void CheckAssignable::endVisit(ASTForRangeStmt* element) {
+  if (isAssignable(element->getOne())) return;
+
+  std::ostringstream oss;
+  oss << "Address of error on line " << element->getLine() << ": ";
+  oss << *element->getOne() << " not an l-value\n";
+  throw SemanticError(oss.str());
+}
+
+void CheckAssignable::endVisit(ASTForIterStmt* element) {
+  if (isAssignable(element->getLeft())) return;
+
+  std::ostringstream oss;
+  oss << "Address of error on line " << element->getLine() << ": ";
+  oss << *element->getLeft() << " not an l-value\n";
   throw SemanticError(oss.str());
 }
 

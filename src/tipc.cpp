@@ -14,6 +14,7 @@ using namespace llvm;
 using namespace std;
 
 static cl::OptionCategory TIPcat("tipc Options","Options for controlling the TIP compilation process.");
+static cl::opt<bool> distypeinf("dt", cl::desc("disable type inference"), cl::cat(TIPcat));
 static cl::opt<bool> ppretty("pp", cl::desc("pretty print"), cl::cat(TIPcat));
 static cl::opt<bool> psym("ps", cl::desc("print symbols"), cl::cat(TIPcat));
 static cl::opt<bool> pcg("pcg", cl::desc("print call graph"), cl::cat(TIPcat));
@@ -80,9 +81,8 @@ int main(int argc, char *argv[]) {
     auto ast = FrontEnd::parse(stream);
 
     try {
-      auto analysisResults = SemanticAnalysis::analyze(ast.get());
-
-
+      auto analysisResults = SemanticAnalysis::analyze(ast.get(), !distypeinf);
+      
       if (ppretty) {
         FrontEnd::prettyprint(ast.get(), std::cout);
       }
