@@ -1,0 +1,6 @@
+main()
+{
+    var x;
+    x = [3 of 2];
+    return x[2];
+}
