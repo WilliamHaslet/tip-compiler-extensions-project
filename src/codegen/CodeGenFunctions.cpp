@@ -1038,7 +1038,7 @@ llvm::Value* ASTArrayExpr::codegen()
 
   std::vector<Value *> args;
   args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), 1));
-  args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), entryCount + 1));
+  args.push_back(ConstantInt::get(Type::getInt64Ty(TheContext), (entryCount + 1)*8));
 
   auto *allocInst = Builder.CreateCall(callocFun, args, "allocPtr");
   auto *castPtr = Builder.CreatePointerCast(allocInst, Type::getInt64PtrTy(TheContext), "castPtr");
@@ -1266,7 +1266,7 @@ llvm::Value* ASTForRangeStmt::codegen()
     Builder.SetInsertPoint(HeaderBB);
 
     Value *curVal = Builder.CreateLoad(iterator);
-    Value *CondV = Builder.CreateICmpSLE(curVal, end, "forCond");
+    Value *CondV = Builder.CreateICmpSLT(curVal, end, "forCond");
 
     // Convert condition to a bool by comparing non-equal to 0.
     CondV = Builder.CreateICmpNE(CondV, ConstantInt::get(CondV->getType(), 0), "loopcond");
