@@ -1,0 +1,17 @@
+foo() {
+    var x,y,z;
+    x = false;
+    y = true;
+    x = not x;
+    z = 0;
+    if (not (x and y)) {
+        z=1;
+    } else {
+        z=2;
+    }
+    return z;
+}
+
+main() {
+    return foo();
+}

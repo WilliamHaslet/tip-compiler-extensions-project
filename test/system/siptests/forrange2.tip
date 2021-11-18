@@ -1,0 +1,9 @@
+main() {
+    var i,x,y;
+    x = 2;
+    y = 0;
+    for (i : 0 .. 50) {
+        y = i;
+    }
+    return y;
+}
