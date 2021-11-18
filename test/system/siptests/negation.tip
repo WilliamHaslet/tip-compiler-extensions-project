@@ -1,0 +1,11 @@
+foo(a) {
+    return -a;
+}
+
+main() {
+    var x,y,z;
+    x = 5;
+    y = 7;
+    z = -x + y;
+    return foo(z);
+}

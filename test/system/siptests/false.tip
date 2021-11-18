@@ -1,0 +1,15 @@
+foo() {
+    var x,z;
+    x = false;
+    z = 0;
+    if (x) {
+        z=1;
+    } else {
+        z=2;
+    }
+    return z;
+}
+
+main() {
+    return foo();
+}
