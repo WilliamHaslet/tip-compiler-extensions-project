@@ -15,6 +15,7 @@ build
 # LLVM
 *.bc
 *.ll
+!fib.tip.ll
 
 # CLion
 .idea/
