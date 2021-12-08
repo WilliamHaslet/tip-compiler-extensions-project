@@ -8,7 +8,7 @@
 
 using namespace llvm;
 
-void Optimizer::optimize(Module* theModule, std::string disableOpt) {
+void Optimizer::optimize(Module* theModule, std::string disableOpt, int rounds) {
   // Create a pass manager to simplify generated module
   auto TheFPM = std::make_unique<legacy::FunctionPassManager>(theModule);
 
@@ -45,7 +45,9 @@ void Optimizer::optimize(Module* theModule, std::string disableOpt) {
 
   // initialize and run simplification pass on each function
   TheFPM->doInitialization();
-  for (auto &fun : theModule->getFunctionList()) {
-    TheFPM->run(fun);
+  for (int i=0; i<rounds; i++) {
+    for (auto &fun : theModule->getFunctionList()) {
+      TheFPM->run(fun);
+    }
   }
 }
