@@ -1,0 +1,16 @@
+perf() {
+    var x, y;
+    y = 0;
+    for (x : 1 .. 100){
+        y++;
+    }
+    return y;
+}
+
+main(n) {
+    var i, j;
+    for (i: 0 .. n){
+        j = perf();
+    }
+    return j;
+}

@@ -1,0 +1,21 @@
+main(n) {
+    var i, c, array;
+    array = [1000 of 12];
+    for (i: 0 .. n){
+        c = mul(3,25,array);
+    }
+    return c;
+}
+
+mul(a,b,array) {
+    var i,j;
+    j = 0;
+    for (i: 0 .. 1000){
+        j = array[a]*a+b;
+        array[b]=a;
+        array[a+b]=a*b;
+        array[b-a]=b;
+        array[a]=12;
+    }
+    return j;
+}
