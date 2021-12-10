@@ -47,7 +47,6 @@ void Optimizer::optimize(Module* theModule, std::string disableOpt, int rounds, 
       TheFPM->add(createCFGSimplificationPass());
     }
 
-  /*
     //100000 iterations of licm.tip; 0.69s non-optimized, 0.53s optimized
     if (!(disableOpt=="clicm")){
       // loop invariant code motion
@@ -87,7 +86,6 @@ void Optimizer::optimize(Module* theModule, std::string disableOpt, int rounds, 
       //facilitates sinking of common expressions
       TheFPM->add(createJumpThreadingPass());
     }
-    */
   }
 
   if (!(disableOpt=="crp")){
