@@ -64,6 +64,11 @@ void Optimizer::optimize(Module* theModule, std::string disableOpt, int rounds, 
       //sinks common instructions into lowest successor
       TheFPM->add(createSinkingPass());
     }
+
+    if(!(disableOpt=="jump")){
+      //facilitates sinking of common expressions
+      TheFPM->add(createJumpThreadingPass());
+    }
   }
 
   if (!moduleDis){
