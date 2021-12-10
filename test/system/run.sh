@@ -1,6 +1,6 @@
 #!/bin/bash
 declare -r ROOT_DIR=${TRAVIS_BUILD_DIR:-$(git rev-parse --show-toplevel)}
-declare -r TIPC=${ROOT_DIR}/build/src/tipc
+declare -r TIPC=${ROOT_DIR}'/build/src/tipc -do=_ -or=1'
 declare -r RTLIB=${ROOT_DIR}/rtlib
 declare -r SCRATCH_DIR=$(mktemp -d)
 
@@ -75,7 +75,7 @@ do
 
   # test unoptimized program
   initialize_test
-  ${TIPC} -do $i
+  ${TIPC} $i
   ${TIPCLANG} $i.bc ${RTLIB}/tip_rtlib.bc -o $base
 
   ./${base} &>/dev/null
@@ -135,19 +135,6 @@ do
   fi 
 done
 
-# Tests to cover argument handling
-# Test pretty printing and symbol printing.
-initialize_test
-${TIPC} -pp -ps iotests/fib.tip >${SCRATCH_DIR}/fib.ppps
-diff iotests/fib.ppps ${SCRATCH_DIR}/fib.ppps >${SCRATCH_DIR}/fib.diff
-if [[ -s ${SCRATCH_DIR}/fib.diff ]]
-then
-  echo -n "Test differences for : " 
-  echo $i
-  cat fib.diff
-  ((numfailures++))
-fi 
-
 # Test default output file.
 initialize_test
 input=iotests/main.tip
@@ -158,35 +145,6 @@ if [ ! -f $expected ]; then
   ((numfailures++))
 fi 
 rm $expected
-
-# Test human-readable assembly.
-initialize_test
-input=iotests/fib.tip
-output=${SCRATCH_DIR}/fib.tip.ll
-expected=iotests/fib.tip.ll
-diffed=${SCRATCH_DIR}/fib.diff
-${TIPC} --asm $input -o $output
-diff <(sed -n '4,$p' $output) <(sed -n '4,$p' $expected) > $diffed
-if [ -s $diffed ]; then
-  echo -n "Test differences for: $input" 
-  cat $diffed
-  ((numfailures++))
-fi 
-
-# Test call graph.
-initialize_test
-input=iotests/fib.tip
-output=${SCRATCH_DIR}/fib.tip.bc
-output_graph=${SCRATCH_DIR}/fib.tip.gv
-expected_graph=iotests/fib.tip.gv
-diffed_graph=${SCRATCH_DIR}/fib.tip.diff
-${TIPC} --pcg $input -o $output > $output_graph
-diff $output_graph $expected_graph > $diffed_graph
-if [ -s $diffed_graph ]; then
-  echo "Test differences for: $input" 
-  cat $diffed_graph
-  ((numfailures++))
-fi 
 
 # Test bad input.
 initialize_test

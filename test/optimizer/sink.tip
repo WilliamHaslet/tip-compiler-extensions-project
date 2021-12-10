@@ -1,0 +1,23 @@
+perf(a) {
+    var x,y,z;
+    for (y : 0 .. #a) {
+        if (x>#a) {
+            a[y] = x;
+            x = x/2; 
+        } else {
+            a[y] = x;
+            x = x/2; 
+            z++;
+        }
+    }
+    return z*a[#a-1];
+}
+
+main(n) {
+    var i, j, a;
+    a = [1,2,3,4,5,6,7,8,9];
+    for (i: 0 .. n){
+        j = perf(a);
+    }
+    return j;
+}
