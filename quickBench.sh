@@ -1,8 +1,9 @@
 #!/bin/zsh
 
-file='funInline.sip'
+file='bigBandTest.sip'
 testFolder='test/optimizer/'
 args='-do=_ -or=1'
+#args2='-do=_ -or=1 -dm -df'
 args2='-do=funinline -or=1'
 
 echo test > a

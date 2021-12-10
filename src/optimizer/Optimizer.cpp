@@ -67,10 +67,6 @@ void Optimizer::optimize(Module* theModule, std::string disableOpt, int rounds, 
     }
   }
 
-  if (!moduleDis){
-    //module passes go here
-  }
-
   if (!(disableOpt=="crp")){
     // Reassociate expressions.
     TheFPM->add(createReassociatePass());
@@ -93,45 +89,48 @@ void Optimizer::optimize(Module* theModule, std::string disableOpt, int rounds, 
 
   auto ThePM = std::make_unique<legacy::PassManager>();
 
-  // 30,000,000 runs, three times
-  // 0.45 average over the three with optimization
-  // 0.79 average over the three without optimization
-  if (!(disableOpt=="dae")){
-    ThePM->add(createDeadArgEliminationPass());
-  }
+  if (!moduleDis)
+  {
+    // 30,000,000 runs, three times
+    // 0.45 average over the three with optimization
+    // 0.79 average over the three without optimization
+    if (!(disableOpt=="dae")){
+      ThePM->add(createDeadArgEliminationPass());
+    }
 
-  // 20,000,000 runs, three times
-  // 0.52 average over the three with optimization
-  // 0.54 average over the three without optimization
-  if (!(disableOpt=="mfun")){
-    ThePM->add(createMergeFunctionsPass());
-  }
+    // 20,000,000 runs, three times
+    // 0.52 average over the three with optimization
+    // 0.54 average over the three without optimization
+    if (!(disableOpt=="mfun")){
+      ThePM->add(createMergeFunctionsPass());
+    }
 
-  // 1,000,000 runs, three times
-  // 1.06333 average over the three with optimization
-  // 1.07 average over the three without optimization
-  if (!(disableOpt=="hcs")){
-    ThePM->add(createHotColdSplittingPass());
-  }
+    // 1,000,000 runs, three times
+    // 1.06 average over the three with optimization
+    // 1.07 average over the three without optimization
+    if (!(disableOpt=="hcs")){
+      ThePM->add(createHotColdSplittingPass());
+    }
 
-  // 30,000,000 runs, three times
-  // 0.95 average over the three with optimization
-  // 0.98 average over the three without optimization
-  if (!(disableOpt=="pil")){
-    ThePM->add(createPartialInliningPass());
-  }
+    // 30,000,000 runs, three times
+    // 0.95 average over the three with optimization
+    // 0.98 average over the three without optimization
+    if (!(disableOpt=="pil")){
+      ThePM->add(createPartialInliningPass());
+    }
 
-  // 1,000,000 runs, three times
-  // 2.55 average over the three with optimization
-  // 2.64 average over the three without optimization
-  if (!(disableOpt=="funinline")){
-    ThePM->add(createFunctionInliningPass());
-  }
+    // 1,000,000 runs, three times
+    // 2.55 average over the three with optimization
+    // 2.64 average over the three without optimization
+    if (!(disableOpt=="funinline")){
+      ThePM->add(createFunctionInliningPass());
+    }
 
-  // This made it slower by about 0.05 seconds over 50,000,000 runs
-  /*if (!(disableOpt=="constprop")){
-    ThePM->add(createIPSCCPPass());
-  }*/
+    // This made it slower by about 0.05 seconds over 50,000,000 runs
+    /*if (!(disableOpt=="constprop")){
+      ThePM->add(createIPSCCPPass());
+    }*/
+  }
 
   // initialize and run simplification pass on each function
   TheFPM->doInitialization();
