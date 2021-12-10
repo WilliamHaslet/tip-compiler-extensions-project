@@ -1,0 +1,27 @@
+perf(x,y) {
+    var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p;
+    a = y;
+    b = (a+1)*x;
+    c = (b+1)*x;
+    d = (c+1+y)*x;
+    e = (f+1)*x;
+    g = (e+1)*x;
+    h = (g+1)*x;
+    i = (h+1+y)*x;
+    j = (i+1)*x;
+    k = (j+1)*x;
+    l = (k+1)*x;
+    m = (l+1+y)*x;
+    n = (m+1)*x;
+    o = (n+1)*x;
+    p = (o+1+y)*x;
+    return a+b+c+d+e+g+h+i+j+k+l+m+n+o+p;
+}
+
+main(n) {
+    var i, j;
+    for (i: 0 .. n) {
+        j = perf(20,12);
+    }
+    return j;
+}

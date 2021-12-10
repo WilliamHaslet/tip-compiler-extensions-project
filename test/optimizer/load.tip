@@ -1,0 +1,37 @@
+perf(x) {
+    var a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p;
+    a = x;
+    b = x;
+    c = x;
+    d = x;
+    e = x;
+    g = x;
+    h = x;
+    i = x;
+    j = x;
+    k = x;
+    l = x;
+    m = x;
+    n = x;
+    o = x;
+    p = x;
+    return doSomething(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
+}
+
+doSomething(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) {
+    var q,r,s,t;
+    for (t : 1 .. 200){
+        q = t*g;
+        r = t;
+        s = r*g;
+    }
+    return s;
+}
+
+main(n) {
+    var i, j;
+    for (i: 0 .. n) {
+        j = perf(20);
+    }
+    return j;
+}
