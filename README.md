@@ -1,3 +1,15 @@
+Project completed at the Univeristy of Virginia in the compilers course in the Fall semester of 2021.
+
+The TIP programming language compiler was extended with Boolean and array types, modulo and relational operators, increment and decrement statements, and iterative and range-style for loops.
+
+The project was completed in a team of two, with both members contributing to all the added features.
+
+Tools used include C++17, Doxygen, LLVM, and ANTLR.
+
+*******************************************
+Original repo readme below
+*******************************************
+
 [![Build Status](https://github.com/matthewbdwyer/tipc/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/matthewbdwyer/tipc/actions/workflows/build-and-test.yml)
 [![codecov.io](https://codecov.io/gh/matthewbdwyer/tipc/coverage.svg?branch=main&flag=codecoverage)](https://codecov.io/gh/matthewbdwyer/tipc?branch=main)
 [![codecov.io](https://img.shields.io/endpoint?logo=codecov&logoColor=blue&url=https%3A%2F%2Fmatthewbdwyer.github.io%2Ftipc%2Fdoccoverage.json)](https://codecov.io/gh/matthewbdwyer/tipc?branch=main)
